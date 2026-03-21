@@ -3,7 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { PlayerPortrait } from "@/components/ui/PlayerPortrait";
 import { CountryFlag } from "@/components/ui/CountryFlag";
-import { JerseyNumber, JerseyHistory } from "@/components/ui/JerseyNumber";
+import { JerseyNumber } from "@/components/ui/JerseyNumber";
+import { JerseyHistory } from "@/components/ui/JerseyHistory";
 import {
   fmtAvg,
   fmtEra,
@@ -504,6 +505,8 @@ export default async function PlayerPage({ params }: Props) {
                   {colleges.join(", ")}
                 </span>
               )}
+            {/* Jersey number history — compact collapsible */}
+            <JerseyHistory entries={jerseyHistory} />
             </div>
           </div>
         </div>
@@ -596,11 +599,6 @@ export default async function PlayerPage({ params }: Props) {
           )}
         </section>
       )}
-
-      {/* =================================================================== */}
-      {/* Jersey Number History                                               */}
-      {/* =================================================================== */}
-      <JerseyHistory entries={jerseyHistory} />
 
       {/* =================================================================== */}
       {/* 4. Standard Batting Table                                           */}
