@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { fmtAvg, fmtInt } from "@/lib/format";
+import { fmtAvg, fmtInt, fullName } from "@/lib/format";
 import { Baseball } from "@phosphor-icons/react/dist/ssr/Baseball";
 import { TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp";
 import { Users } from "@phosphor-icons/react/dist/ssr/Users";
@@ -22,7 +22,7 @@ async function getOverviewStats() {
             AB: { gte: 400 },
           },
           include: {
-            player: { select: { nameFirst: true, nameLast: true } },
+            player: { select: { nameFirst: true, nameLast: true, nameGiven: true } },
           },
           orderBy: [{ H: "desc" }],
           take: 5,
@@ -187,7 +187,7 @@ export default async function HomePage() {
                     {i + 1}
                   </span>
                   <span className="flex-1 font-medium text-sm">
-                    {b.player.nameFirst} {b.player.nameLast}
+                    {fullName(b.player.nameFirst, b.player.nameLast, b.player.nameGiven)}
                   </span>
                   <span className="text-sm text-muted mr-6">{b.teamID}</span>
                   <span className="w-12 text-right font-mono text-sm">

@@ -63,7 +63,13 @@ export function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export function fullName(first: string | null, last: string | null): string {
+export function fullName(
+  first: string | null,
+  last: string | null,
+  given?: string | null
+): string {
+  // Always use first + last (e.g. "Mike Trout")
+  // nameGiven is shown separately where needed (e.g. "Michael Nelson")
   return [first, last].filter(Boolean).join(" ");
 }
 

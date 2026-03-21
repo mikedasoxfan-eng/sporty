@@ -37,13 +37,13 @@ async function getSeasonData(year: number) {
     }),
     prisma.batting.findMany({
       where: { yearID: year, AB: { gte: 100 } },
-      include: { player: { select: { nameFirst: true, nameLast: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
       orderBy: [{ H: "desc" }],
       take: 10,
     }),
     prisma.pitching.findMany({
       where: { yearID: year, IPouts: { gte: 150 } },
-      include: { player: { select: { nameFirst: true, nameLast: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
       orderBy: [{ W: "desc" }],
       take: 10,
     }),
@@ -268,7 +268,7 @@ export default async function SeasonPage({ params }: Props) {
                 {teams.map((t) => (
                   <tr key={t.teamID}>
                     <td className="py-2 px-3 text-left font-medium sticky left-0 z-10 bg-surface">
-                      <Link href={`/baseball/teams/${t.teamID}/${year}`} className="hover:text-accent transition-colors">
+                      <Link href={`/baseball/teams/${t.teamID}/${year}`} className="text-link hover:text-link-hover hover:underline transition-colors">
                         {t.name}
                       </Link>
                     </td>

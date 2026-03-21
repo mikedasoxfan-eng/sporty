@@ -9,6 +9,7 @@ import {
   fmtRecord,
   fmtWinPct,
   ordinal,
+  fullName,
 } from "@/lib/format";
 import {
   battingAvg,
@@ -49,17 +50,17 @@ async function getTeamData(teamId: string, year: number) {
   const [batters, pitchers, manager] = await Promise.all([
     prisma.batting.findMany({
       where: { teamID: teamId, yearID: year },
-      include: { player: { select: { nameFirst: true, nameLast: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
       orderBy: [{ AB: "desc" }],
     }),
     prisma.pitching.findMany({
       where: { teamID: teamId, yearID: year },
-      include: { player: { select: { nameFirst: true, nameLast: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
       orderBy: [{ IPouts: "desc" }],
     }),
     prisma.managers.findFirst({
       where: { teamID: teamId, yearID: year },
-      include: { player: { select: { nameFirst: true, nameLast: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
     }),
   ]);
 
@@ -91,7 +92,7 @@ export default async function TeamSeasonPage({ params }: Props) {
             </h1>
             {manager?.player && (
               <p className="text-sm text-muted mt-1">
-                Manager: {manager.player.nameFirst} {manager.player.nameLast}
+                Manager: {fullName(manager.player.nameFirst, manager.player.nameLast, manager.player.nameGiven)}
               </p>
             )}
           </div>
@@ -192,9 +193,9 @@ export default async function TeamSeasonPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                           <Link
                             href={`/baseball/players/${row.playerID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
-                            {row.player.nameFirst} {row.player.nameLast}
+                            {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
                           </Link>
                         </td>
                         <td className="py-2 px-2.5 text-right font-mono text-xs">{row.G}</td>
@@ -258,9 +259,9 @@ export default async function TeamSeasonPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                           <Link
                             href={`/baseball/players/${row.playerID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
-                            {row.player.nameFirst} {row.player.nameLast}
+                            {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
                           </Link>
                         </td>
                         <td className="py-2 px-2.5 text-right font-mono text-xs">{row.W}</td>

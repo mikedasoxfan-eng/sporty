@@ -33,10 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const player = await prisma.people.findUnique({
     where: { playerID: id },
-    select: { nameFirst: true, nameLast: true },
+    select: { nameFirst: true, nameLast: true, nameGiven: true },
   });
   if (!player) return { title: "Player Not Found" };
-  return { title: fullName(player.nameFirst, player.nameLast) };
+  return { title: fullName(player.nameFirst, player.nameLast, player.nameGiven) };
 }
 
 async function getPlayerData(id: string) {
@@ -204,7 +204,7 @@ export default async function PlayerPage({ params }: Props) {
               )}
             </div>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
-              {fullName(player.nameFirst, player.nameLast)}
+              {fullName(player.nameFirst, player.nameLast, player.nameGiven)}
             </h1>
             {player.nameGiven &&
               player.nameGiven !==
@@ -436,7 +436,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                           <Link
                             href={`/baseball/seasons/${row.yearID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
                             {row.yearID}
                           </Link>
@@ -444,7 +444,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left">
                           <Link
                             href={`/baseball/teams/${row.teamID}/${row.yearID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
                             {row.teamID}
                           </Link>
@@ -721,7 +721,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                           <Link
                             href={`/baseball/seasons/${row.yearID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
                             {row.yearID}
                           </Link>
@@ -729,7 +729,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className="py-2 px-2.5 text-left">
                           <Link
                             href={`/baseball/teams/${row.teamID}/${row.yearID}`}
-                            className="hover:text-accent transition-colors"
+                            className="text-link hover:text-link-hover hover:underline transition-colors"
                           >
                             {row.teamID}
                           </Link>

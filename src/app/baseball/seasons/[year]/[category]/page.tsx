@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { fmtAvg, fmtEra, fmtIP } from "@/lib/format";
+import { fmtAvg, fmtEra, fmtIP, fullName } from "@/lib/format";
 import {
   battingAvg,
   onBasePct,
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getBattingLeaders(year: number) {
   return prisma.batting.findMany({
     where: { yearID: year, AB: { gte: 50 } },
-    include: { player: { select: { nameFirst: true, nameLast: true } } },
+    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
     orderBy: [{ AB: "desc" }],
   });
 }
@@ -37,7 +37,7 @@ async function getBattingLeaders(year: number) {
 async function getPitchingLeaders(year: number) {
   return prisma.pitching.findMany({
     where: { yearID: year, IPouts: { gte: 30 } },
-    include: { player: { select: { nameFirst: true, nameLast: true } } },
+    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
     orderBy: [{ IPouts: "desc" }],
   });
 }
@@ -201,9 +201,9 @@ async function BattingTable({ year }: { year: number }) {
                   <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                     <Link
                       href={`/baseball/players/${row.playerID}`}
-                      className="hover:text-accent transition-colors"
+                      className="text-link hover:text-link-hover hover:underline transition-colors"
                     >
-                      {row.player.nameFirst} {row.player.nameLast}
+                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
                     </Link>
                   </td>
                   <td className="py-2 px-2.5 text-left text-muted">
@@ -320,9 +320,9 @@ async function PitchingTable({ year }: { year: number }) {
                   <td className="py-2 px-2.5 text-left font-medium sticky left-0 z-10 bg-surface">
                     <Link
                       href={`/baseball/players/${row.playerID}`}
-                      className="hover:text-accent transition-colors"
+                      className="text-link hover:text-link-hover hover:underline transition-colors"
                     >
-                      {row.player.nameFirst} {row.player.nameLast}
+                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
                     </Link>
                   </td>
                   <td className="py-2 px-2.5 text-left text-muted">

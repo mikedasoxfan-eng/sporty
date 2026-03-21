@@ -19,19 +19,24 @@ function readCSV(filename: string): Record<string, string>[] {
     console.warn(`  Skipping ${filename} (not found)`);
     return [];
   }
-  const content = fs.readFileSync(filepath, "utf-8");
+  // Strip BOM if present
+  const content = fs.readFileSync(filepath, "utf-8").replace(/^\uFEFF/, "");
   return parse(content, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
     relax_column_count: true,
+    bom: true,
   });
 }
 
 function toInt(val: string | undefined): number | null {
   if (!val || val === "" || val === "NA") return null;
   const n = parseInt(val, 10);
-  return isNaN(n) ? null : n;
+  if (isNaN(n)) return null;
+  // Protect against INT4 overflow (Postgres max: 2,147,483,647)
+  if (n > 2147483647 || n < -2147483648) return null;
+  return n;
 }
 
 function toFloat(val: string | undefined): number | null {
@@ -700,10 +705,26 @@ async function ingestCollegePlaying() {
   if (rows.length === 0) return;
 
   await prisma.collegePlaying.deleteMany();
+
+  // Get valid school and player IDs to filter bad references
+  const validSchools = new Set(
+    (await prisma.schools.findMany({ select: { schoolID: true } })).map(
+      (s) => s.schoolID
+    )
+  );
+  const validPlayers = new Set(
+    (await prisma.people.findMany({ select: { playerID: true } })).map(
+      (p) => p.playerID
+    )
+  );
+
+  const filtered = rows.filter(
+    (r) => validSchools.has(r.schoolID) && validPlayers.has(r.playerID)
+  );
   const batch = 1000;
   let count = 0;
-  for (let i = 0; i < rows.length; i += batch) {
-    const chunk = rows.slice(i, i + batch);
+  for (let i = 0; i < filtered.length; i += batch) {
+    const chunk = filtered.slice(i, i + batch);
     await prisma.collegePlaying.createMany({
       data: chunk.map((r) => ({
         playerID: r.playerID,
@@ -713,7 +734,7 @@ async function ingestCollegePlaying() {
     });
     count += chunk.length;
   }
-  console.log(`  ${count} college records ✓`);
+  console.log(`  ${count} college records (${rows.length - filtered.length} skipped) ✓`);
 }
 
 async function ingestGameLogs() {
