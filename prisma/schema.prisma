@@ -28,6 +28,8 @@ model People {
   nameFirst    String?
   nameLast     String?
   nameGiven    String?
+  nameSuffix   String?
+  nickName     String?
   weight       Int?
   height       Int?
   bats         String?
@@ -36,6 +38,9 @@ model People {
   finalGame    String?
   retroID      String?
   bbrefID      String?
+  mlbamID      Int?     // MLB Stats API ID
+
+  @@index([mlbamID])
 
   batting         Batting[]
   pitching        Pitching[]

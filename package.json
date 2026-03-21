@@ -12,7 +12,9 @@
     "db:studio": "prisma studio",
     "data:download": "tsx scripts/download.ts",
     "data:ingest": "tsx scripts/ingest.ts",
-    "data:pipeline": "tsx scripts/download.ts && tsx scripts/ingest.ts"
+    "data:pipeline": "tsx scripts/download.ts && tsx scripts/ingest.ts",
+    "data:enrich": "tsx scripts/enrich-mlb-api.ts",
+    "data:enrich:recent": "tsx scripts/enrich-mlb-api.ts --start-year 1990 --end-year 2025"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

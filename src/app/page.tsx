@@ -22,7 +22,7 @@ async function getOverviewStats() {
             AB: { gte: 400 },
           },
           include: {
-            player: { select: { nameFirst: true, nameLast: true, nameGiven: true } },
+            player: { select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true } },
           },
           orderBy: [{ H: "desc" }],
           take: 5,
@@ -187,7 +187,7 @@ export default async function HomePage() {
                     {i + 1}
                   </span>
                   <span className="flex-1 font-medium text-sm">
-                    {fullName(b.player.nameFirst, b.player.nameLast, b.player.nameGiven)}
+                    {fullName(b.player.nameFirst, b.player.nameLast, b.player.nameGiven, b.player.nameSuffix)}
                   </span>
                   <span className="text-sm text-muted mr-6">{b.teamID}</span>
                   <span className="w-12 text-right font-mono text-sm">

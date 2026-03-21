@@ -33,10 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const player = await prisma.people.findUnique({
     where: { playerID: id },
-    select: { nameFirst: true, nameLast: true, nameGiven: true },
+    select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true },
   });
   if (!player) return { title: "Player Not Found" };
-  return { title: fullName(player.nameFirst, player.nameLast, player.nameGiven) };
+  return { title: fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix) };
 }
 
 async function getPlayerData(id: string) {
@@ -204,7 +204,7 @@ export default async function PlayerPage({ params }: Props) {
               )}
             </div>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
-              {fullName(player.nameFirst, player.nameLast, player.nameGiven)}
+              {fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix)}
             </h1>
             {player.nameGiven &&
               player.nameGiven !==

@@ -37,13 +37,13 @@ async function getSeasonData(year: number) {
     }),
     prisma.batting.findMany({
       where: { yearID: year, AB: { gte: 100 } },
-      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true } } },
       orderBy: [{ H: "desc" }],
       take: 10,
     }),
     prisma.pitching.findMany({
       where: { yearID: year, IPouts: { gte: 150 } },
-      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
+      include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true } } },
       orderBy: [{ W: "desc" }],
       take: 10,
     }),

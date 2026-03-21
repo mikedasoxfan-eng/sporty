@@ -66,11 +66,18 @@ export function ordinal(n: number): string {
 export function fullName(
   first: string | null,
   last: string | null,
-  given?: string | null
+  given?: string | null,
+  suffix?: string | null
 ): string {
-  // Always use first + last (e.g. "Mike Trout")
-  // nameGiven is shown separately where needed (e.g. "Michael Nelson")
-  return [first, last].filter(Boolean).join(" ");
+  // first + last + suffix (e.g. "Vladimir Guerrero Jr.")
+  // The suffix comes from the MLB API (Jr., Sr., II, III, IV)
+  // nameLast from MLB API may already include the suffix (e.g. "Guerrero Jr.")
+  // so we only append suffix if nameLast doesn't already contain it
+  const base = [first, last].filter(Boolean).join(" ");
+  if (suffix && last && !last.includes(suffix)) {
+    return `${base} ${suffix}`;
+  }
+  return base;
 }
 
 export function teamYear(teamID: string, year: number): string {

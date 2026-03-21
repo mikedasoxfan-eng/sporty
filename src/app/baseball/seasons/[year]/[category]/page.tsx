@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getBattingLeaders(year: number) {
   return prisma.batting.findMany({
     where: { yearID: year, AB: { gte: 50 } },
-    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
+    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true } } },
     orderBy: [{ AB: "desc" }],
   });
 }
@@ -37,7 +37,7 @@ async function getBattingLeaders(year: number) {
 async function getPitchingLeaders(year: number) {
   return prisma.pitching.findMany({
     where: { yearID: year, IPouts: { gte: 30 } },
-    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true } } },
+    include: { player: { select: { nameFirst: true, nameLast: true, nameGiven: true, nameSuffix: true } } },
     orderBy: [{ IPouts: "desc" }],
   });
 }
@@ -203,7 +203,7 @@ async function BattingTable({ year }: { year: number }) {
                       href={`/baseball/players/${row.playerID}`}
                       className="text-link hover:text-link-hover hover:underline transition-colors"
                     >
-                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
+                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven, row.player.nameSuffix)}
                     </Link>
                   </td>
                   <td className="py-2 px-2.5 text-left text-muted">
@@ -322,7 +322,7 @@ async function PitchingTable({ year }: { year: number }) {
                       href={`/baseball/players/${row.playerID}`}
                       className="text-link hover:text-link-hover hover:underline transition-colors"
                     >
-                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven)}
+                      {fullName(row.player.nameFirst, row.player.nameLast, row.player.nameGiven, row.player.nameSuffix)}
                     </Link>
                   </td>
                   <td className="py-2 px-2.5 text-left text-muted">
