@@ -10,34 +10,37 @@ interface PlayerPortraitProps {
 }
 
 /**
- * Player portrait with multiple image source fallback:
- * 1. MLB Photos (current headshot)
- * 2. MLB Photos (action shot)
- * 3. MiLB headshot (minor league)
- * 4. Initials fallback
+ * Player portrait with multiple image source fallback chain:
+ * 1. MLB midfield spots (works for almost all players, even historical)
+ * 2. MLB static headshot JPG (redirect-based, good quality)
+ * 3. MLB Photos silo (high-res cutout)
+ * 4. MLB Photos headshot with generic fallback
+ * 5. Initials placeholder
  */
 export function PlayerPortrait({
   mlbamID,
-  playerID,
   name,
   initials,
 }: PlayerPortraitProps) {
   const [sourceIndex, setSourceIndex] = useState(0);
 
-  // Build the source chain — only MLB sources that use mlbamID
   const sources: string[] = [];
   if (mlbamID) {
-    // Primary: MLB headshot (current)
+    // Primary: midfield spots — works for nearly everyone including Babe Ruth
     sources.push(
-      `https://img.mlb.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${mlbamID}/headshot/67/current`
+      `https://midfield.mlbstatic.com/v1/people/${mlbamID}/spots/240`
     );
-    // Fallback: MLB silo (full body)
+    // Fallback: mlbstatic headshot JPG
     sources.push(
-      `https://img.mlb.com/mlb-photos/image/upload/d_people:generic:headshot:silo:current.png/w_213,q_auto:best/v1/people/${mlbamID}/headshot/silo/current`
+      `https://img.mlbstatic.com/mlb/images/players/head_shot/${mlbamID}.jpg`
     );
-    // Fallback: MLB action shot
+    // Fallback: mlbstatic photos silo
     sources.push(
-      `https://img.mlb.com/mlb-photos/image/upload/w_213,q_auto:best/v1/people/${mlbamID}/action/hero/current`
+      `https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_100/v1/people/${mlbamID}/headshot/silo/current`
+    );
+    // Fallback: mlbstatic with generic default
+    sources.push(
+      `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${mlbamID}/headshot/67/current`
     );
   }
 
@@ -46,7 +49,7 @@ export function PlayerPortrait({
 
   if (allFailed) {
     return (
-      <div className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-xl border border-border bg-surface-alt flex items-center justify-center flex-shrink-0">
+      <div className="w-[140px] h-[140px] md:w-[180px] md:h-[180px] rounded-xl border border-border bg-surface-alt flex items-center justify-center flex-shrink-0">
         <span className="text-4xl md:text-5xl text-muted-light font-light">
           {initials}
         </span>
@@ -55,7 +58,7 @@ export function PlayerPortrait({
   }
 
   return (
-    <div className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-xl border border-border bg-surface overflow-hidden flex-shrink-0">
+    <div className="w-[140px] h-[140px] md:w-[180px] md:h-[180px] rounded-xl border border-border bg-surface overflow-hidden flex-shrink-0">
       <img
         src={currentSrc}
         alt={name}

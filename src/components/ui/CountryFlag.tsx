@@ -1,4 +1,3 @@
-// Maps Lahman birthCountry values to ISO 3166-1 alpha-2 codes
 const COUNTRY_TO_ISO: Record<string, string> = {
   USA: "us",
   "D.R.": "do",
@@ -27,34 +26,12 @@ const COUNTRY_TO_ISO: Record<string, string> = {
   "United Kingdom": "gb",
   Jamaica: "jm",
   Aruba: "aw",
-  "American Samoa": "as",
   Spain: "es",
-  Scotland: "gb-sct",
   Ireland: "ie",
   France: "fr",
-  Belgium: "be",
-  Norway: "no",
-  Sweden: "se",
-  Finland: "fi",
-  Austria: "at",
-  Switzerland: "ch",
-  Peru: "pe",
-  Chile: "cl",
   "Costa Rica": "cr",
   Guatemala: "gt",
   "El Salvador": "sv",
-  Ecuador: "ec",
-  Bolivia: "bo",
-  China: "cn",
-  Philippines: "ph",
-  Indonesia: "id",
-  Vietnam: "vn",
-  Lithuania: "lt",
-  Poland: "pl",
-  "Czech Republic": "cz",
-  Russia: "ru",
-  Ukraine: "ua",
-  "South Africa": "za",
   "Dominican Republic": "do",
   "Puerto Rico": "pr",
   "South Korea": "kr",
@@ -69,13 +46,15 @@ interface CountryFlagProps {
 export function CountryFlag({ country, className = "" }: CountryFlagProps) {
   if (!country) return null;
   const iso = COUNTRY_TO_ISO[country];
-  if (!iso) return <span className="text-xs text-muted">{country}</span>;
+  if (!iso) return null;
 
   return (
-    <span
-      className={`fi fi-${iso} fis inline-block rounded-sm ${className}`}
-      style={{ width: "1.2em", height: "0.9em", lineHeight: "0.9em" }}
+    <img
+      src={`/flags/4x3/${iso}.svg`}
+      alt={country}
       title={country}
+      className={`inline-block rounded-sm align-middle ${className}`}
+      style={{ width: "1.4em", height: "1em" }}
     />
   );
 }
