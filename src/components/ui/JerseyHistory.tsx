@@ -8,13 +8,16 @@ function formatYear(dateStr: string | null): string {
   return dateStr.slice(0, 4);
 }
 
-// Only MLB team abbreviations (no minor league)
+// MLB team abbreviations only — all current + historical franchises
+// Uses the abbreviations the MLB Stats API returns
 const MLB_TEAMS = new Set([
-  "ANA","ARI","ATL","BAL","BOS","CHA","CHN","CIN","CLE","COL",
-  "DET","FLO","HOU","KCA","LAA","LAN","MIA","MIL","MIN","MON",
-  "NYA","NYN","OAK","PHI","PIT","SDN","SEA","SFN","SLN","TBA",
-  "TEX","TOR","WAS","WSN","SDP","LAD","NYY","NYM","CHC","CWS",
-  "STL","SF","TB","KC","SD",
+  // Current 30 teams (API abbreviations)
+  "ARI","ATL","BAL","BOS","CHC","CIN","CLE","COL","CWS","DET",
+  "HOU","KC","LAA","LAD","MIA","MIL","MIN","NYM","NYY","OAK",
+  "PHI","PIT","SD","SEA","SF","STL","TB","TEX","TOR","WSH",
+  // Historical / alternate abbreviations
+  "ANA","CHA","CHN","FLA","FLO","KCA","LAN","MON","NYA","NYN",
+  "SDN","SFN","SLN","TBA","WAS","WSN",
 ]);
 
 function dedupeEntries(entries: JerseyHistoryEntry[]) {
@@ -23,8 +26,10 @@ function dedupeEntries(entries: JerseyHistoryEntry[]) {
     { number: string; abbr: string | null; startYear: string; endYear: string; isActive: boolean }
   >();
   for (const e of entries) {
-    // Skip non-MLB teams
+    // Skip non-MLB teams (keep null abbr entries — those are primaryNumber fallbacks)
     if (e.teamAbbr && !MLB_TEAMS.has(e.teamAbbr)) continue;
+    // Skip entries from DSL, AZL, GCL, FCL, ACL and other minor league prefixes
+    if (e.teamAbbr && /^[A-Z]-/.test(e.teamAbbr)) continue;
     const key = `${e.jerseyNumber}-${e.teamAbbr || "?"}`;
     const existing = grouped.get(key);
     const startYear = formatYear(e.startDate);
@@ -54,7 +59,7 @@ export function JerseyHistory({ entries }: Props) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-3 flex items-center gap-1.5">
+    <div className="mb-2 flex items-center gap-1.5">
       {items.map((item, i) => {
         const years = item.startYear + (item.endYear && item.startYear !== item.endYear ? `\u2013${item.endYear}` : "");
         const tooltip = `#${item.number} \u2014 ${item.abbr || "?"} (${years})`;

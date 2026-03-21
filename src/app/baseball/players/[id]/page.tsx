@@ -390,13 +390,17 @@ export default async function PlayerPage({ params }: Props) {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
+            {/* Jersey number badges — above name */}
+            <JerseyHistory entries={jerseyHistory} />
+
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
+              {fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix)}
+            </h1>
+
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               <span className="text-xs font-medium text-muted uppercase tracking-wider">
                 {primaryPosition}
               </span>
-              {player.uniformNumber && (
-                <JerseyNumber number={player.uniformNumber} size="sm" />
-              )}
               {isHOF && (
                 <span className="text-xs font-medium px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md dark:bg-amber-900/30 dark:text-amber-400">
                   Hall of Fame
@@ -408,10 +412,6 @@ export default async function PlayerPage({ params }: Props) {
                 </span>
               )}
             </div>
-
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
-              {fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix)}
-            </h1>
 
             {player.nickName && (
               <p className="text-sm text-muted mt-1">&ldquo;{player.nickName}&rdquo;</p>
@@ -505,8 +505,6 @@ export default async function PlayerPage({ params }: Props) {
                   {colleges.join(", ")}
                 </span>
               )}
-            {/* Jersey number history — compact collapsible */}
-            <JerseyHistory entries={jerseyHistory} />
             </div>
           </div>
         </div>
