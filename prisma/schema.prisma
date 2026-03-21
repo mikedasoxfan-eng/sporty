@@ -28,17 +28,18 @@ model People {
   nameFirst    String?
   nameLast     String?
   nameGiven    String?
-  nameSuffix   String?
-  nickName     String?
-  weight       Int?
-  height       Int?
-  bats         String?
-  throws       String?
-  debut        String?
-  finalGame    String?
-  retroID      String?
-  bbrefID      String?
-  mlbamID      Int?     // MLB Stats API ID
+  nameSuffix    String?
+  nickName      String?
+  uniformNumber String?
+  weight        Int?
+  height        Int?
+  bats          String?
+  throws        String?
+  debut         String?
+  finalGame     String?
+  retroID       String?
+  bbrefID       String?
+  mlbamID       Int?     // MLB Stats API ID
 
   @@index([mlbamID])
 
@@ -51,6 +52,7 @@ model People {
   fieldingPost    FieldingPost[]
   allstarFull     AllstarFull[]
   hallOfFame      HallOfFame[]
+  playerWAR       PlayerWAR[]
   awardsPlayers   AwardsPlayers[]
   awardsShare     AwardsSharePlayers[]
   salaries        Salaries[]
@@ -760,4 +762,26 @@ model GameLog {
   @@index([homeTeam, date])
   @@index([visitingTeam, date])
   @@index([parkID])
+}
+
+// ============================================================
+// WAR DATA (imported from Baseball-Reference)
+// ============================================================
+
+model PlayerWAR {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  teamID   String?
+  lgID     String?
+  WAR      Float?
+  oWAR     Float?
+  dWAR     Float?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID])
+  @@index([playerID])
+  @@index([yearID])
+  @@index([yearID, WAR])
 }

@@ -26,6 +26,7 @@ interface MLBPerson {
   nickName?: string;
   fullFMLName?: string;
   middleName?: string;
+  primaryNumber?: string;
   xrefIds?: { xrefId: string; xrefType: string }[];
 }
 
@@ -154,6 +155,10 @@ async function main() {
       if (person.nickName) {
         update.nickName = person.nickName;
         nicknameCount++;
+      }
+
+      if (person.primaryNumber) {
+        update.uniformNumber = person.primaryNumber;
       }
 
       // Also fix nameFirst/nameLast from MLB API if they differ
