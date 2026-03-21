@@ -60,6 +60,7 @@ model People {
   managers        Managers[]
   fieldingOF      FieldingOF[]
   fieldingOFsplit FieldingOFsplit[]
+  jerseyHistory   JerseyHistory[]
 
   @@index([nameLast, nameFirst])
   @@index([bbrefID])
@@ -784,4 +785,24 @@ model PlayerWAR {
   @@index([playerID])
   @@index([yearID])
   @@index([yearID, WAR])
+}
+
+// ============================================================
+// JERSEY NUMBER HISTORY (from MLB Stats API rosterEntries)
+// ============================================================
+
+model JerseyHistory {
+  id            Int     @id @default(autoincrement())
+  playerID      String
+  jerseyNumber  String
+  teamName      String?
+  teamAbbr      String?
+  mlbTeamID     Int?
+  startDate     String?
+  endDate       String?
+  isActive      Boolean @default(false)
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@index([playerID])
 }

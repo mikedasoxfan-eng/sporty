@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { PlayerPortrait } from "@/components/ui/PlayerPortrait";
 import { CountryFlag } from "@/components/ui/CountryFlag";
+import { JerseyNumber, JerseyHistory } from "@/components/ui/JerseyNumber";
 import {
   fmtAvg,
   fmtEra,
@@ -127,6 +128,7 @@ async function getPlayerData(id: string) {
     hallOfFame,
     playerWAR,
     collegePlaying,
+    jerseyHistory,
   ] = await Promise.all([
     prisma.batting.findMany({
       where: { playerID: id },
@@ -180,6 +182,10 @@ async function getPlayerData(id: string) {
       where: { playerID: id },
       include: { school: true },
     }),
+    prisma.jerseyHistory.findMany({
+      where: { playerID: id },
+      orderBy: [{ startDate: "desc" }],
+    }),
   ]);
 
   return {
@@ -197,6 +203,7 @@ async function getPlayerData(id: string) {
     hallOfFame,
     playerWAR,
     collegePlaying,
+    jerseyHistory,
   };
 }
 
@@ -224,6 +231,7 @@ export default async function PlayerPage({ params }: Props) {
     hallOfFame,
     playerWAR,
     collegePlaying,
+    jerseyHistory,
   } = data;
 
   const isBatter = batting.length > 0;
@@ -386,9 +394,7 @@ export default async function PlayerPage({ params }: Props) {
                 {primaryPosition}
               </span>
               {player.uniformNumber && (
-                <div className="inline-flex items-center justify-center w-8 h-8 border border-border rounded bg-surface">
-                  <span className="font-mono font-bold text-sm">{player.uniformNumber}</span>
-                </div>
+                <JerseyNumber number={player.uniformNumber} size="sm" />
               )}
               {isHOF && (
                 <span className="text-xs font-medium px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md dark:bg-amber-900/30 dark:text-amber-400">
@@ -590,6 +596,11 @@ export default async function PlayerPage({ params }: Props) {
           )}
         </section>
       )}
+
+      {/* =================================================================== */}
+      {/* Jersey Number History                                               */}
+      {/* =================================================================== */}
+      <JerseyHistory entries={jerseyHistory} />
 
       {/* =================================================================== */}
       {/* 4. Standard Batting Table                                           */}

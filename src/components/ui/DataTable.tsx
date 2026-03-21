@@ -11,6 +11,8 @@ export interface Column<T> {
   render?: (row: T, index: number) => React.ReactNode;
   sortable?: boolean;
   mono?: boolean;
+  /** If true, sort ascending first (lower is better — ERA, WHIP, etc.) */
+  invertSort?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -24,6 +26,8 @@ interface DataTableProps<T> {
   compact?: boolean;
 }
 
+type SortState = "none" | "desc" | "asc";
+
 export function DataTable<T>({
   columns,
   data,
@@ -35,28 +39,41 @@ export function DataTable<T>({
   compact = false,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortState, setSortState] = useState<SortState>("none");
 
-  const sorted = sortKey
-    ? [...data].sort((a, b) => {
-        const aVal = (a as Record<string, unknown>)[sortKey];
-        const bVal = (b as Record<string, unknown>)[sortKey];
-        if (aVal == null && bVal == null) return 0;
-        if (aVal == null) return 1;
-        if (bVal == null) return -1;
-        const cmp = typeof aVal === "number" && typeof bVal === "number"
-          ? aVal - bVal
-          : String(aVal).localeCompare(String(bVal));
-        return sortDir === "asc" ? cmp : -cmp;
-      })
-    : data;
+  const sorted =
+    sortKey && sortState !== "none"
+      ? [...data].sort((a, b) => {
+          const aVal = (a as Record<string, unknown>)[sortKey];
+          const bVal = (b as Record<string, unknown>)[sortKey];
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return 1;
+          if (bVal == null) return -1;
+          const cmp =
+            typeof aVal === "number" && typeof bVal === "number"
+              ? aVal - bVal
+              : String(aVal).localeCompare(String(bVal));
+          return sortState === "asc" ? cmp : -cmp;
+        })
+      : data;
 
-  function handleSort(key: string) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
+  function handleSort(key: string, invertSort?: boolean) {
+    if (sortKey !== key) {
+      // New column: start with "most" (desc for counting stats, asc for rate-lower-is-better)
       setSortKey(key);
-      setSortDir("desc");
+      setSortState(invertSort ? "asc" : "desc");
+    } else {
+      // Same column: cycle desc -> asc -> none
+      setSortState((s) => {
+        if (invertSort) {
+          if (s === "asc") return "desc";
+          if (s === "desc") return "none";
+          return "asc";
+        }
+        if (s === "desc") return "asc";
+        if (s === "asc") return "none";
+        return "desc";
+      });
     }
   }
 
@@ -74,26 +91,33 @@ export function DataTable<T>({
         <table className="stat-table w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`${py} ${px} text-xs font-medium text-muted uppercase tracking-wider
-                    ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"}
-                    ${col.sticky ? "sticky left-0 z-20 bg-surface" : ""}
-                    ${col.sortable !== false ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
-                  onClick={() => col.sortable !== false && handleSort(col.key)}
-                  title={col.label}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {col.abbr || col.label}
-                    {sortKey === col.key && (
-                      <span className="text-accent text-[10px]">
-                        {sortDir === "asc" ? "\u2191" : "\u2193"}
-                      </span>
-                    )}
-                  </span>
-                </th>
-              ))}
+              {columns.map((col) => {
+                const isActive = sortKey === col.key && sortState !== "none";
+                return (
+                  <th
+                    key={col.key}
+                    className={`${py} ${px} text-xs font-medium uppercase tracking-wider whitespace-nowrap
+                      ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"}
+                      ${col.sticky ? "sticky left-0 z-20" : ""}
+                      ${col.sortable !== false ? "cursor-pointer select-none transition-colors" : ""}
+                      ${isActive ? "text-accent" : "text-muted hover:text-foreground"}`}
+                    onClick={() =>
+                      col.sortable !== false &&
+                      handleSort(col.key, col.invertSort)
+                    }
+                    title={`${col.label}${col.sortable !== false ? " (click to sort)" : ""}`}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col.abbr || col.label}
+                      {isActive && (
+                        <span className="text-[10px]">
+                          {sortState === "asc" ? "\u25B2" : "\u25BC"}
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="divide-y divide-border-light">
@@ -117,7 +141,7 @@ export function DataTable<T>({
                     {col.render
                       ? col.render(row, i)
                       : String(
-                          (row as Record<string, unknown>)[col.key] ?? "—"
+                          (row as Record<string, unknown>)[col.key] ?? "\u2014"
                         )}
                   </td>
                 ))}
