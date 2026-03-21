@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { getLeagueAverages, opsPlus, eraPlus } from "@/lib/league-averages";
 import { PlayerPortrait } from "@/components/ui/PlayerPortrait";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { JerseyNumber } from "@/components/ui/JerseyNumber";
@@ -189,6 +190,43 @@ async function getPlayerData(id: string) {
     }),
   ]);
 
+  // Collect unique yearID+lgID combos from batting and pitching rows
+  const yearLgCombos = new Set<string>();
+  const teamKeys = new Set<string>();
+  for (const row of batting) {
+    if (row.yearID && row.lgID) yearLgCombos.add(`${row.yearID}|${row.lgID}`);
+    if (row.yearID && row.teamID) teamKeys.add(`${row.yearID}|${row.teamID}`);
+  }
+  for (const row of pitching) {
+    if (row.yearID && row.lgID) yearLgCombos.add(`${row.yearID}|${row.lgID}`);
+    if (row.yearID && row.teamID) teamKeys.add(`${row.yearID}|${row.teamID}`);
+  }
+
+  // Fetch league averages for each year+league combo
+  const leagueAvgMap = new Map<string, { OBP: number | null; SLG: number | null; ERA: number | null }>();
+  await Promise.all(
+    [...yearLgCombos].map(async (key) => {
+      const [yearStr, lgID] = key.split("|");
+      const avg = await getLeagueAverages(Number(yearStr), lgID);
+      leagueAvgMap.set(key, { OBP: avg.OBP, SLG: avg.SLG, ERA: avg.ERA });
+    })
+  );
+
+  // Fetch park factors (BPF, PPF) for each team+year combo
+  const parkFactorMap = new Map<string, { BPF: number; PPF: number }>();
+  const teamRows = await prisma.teams.findMany({
+    where: {
+      OR: [...teamKeys].map((key) => {
+        const [yearStr, teamID] = key.split("|");
+        return { yearID: Number(yearStr), teamID };
+      }),
+    },
+    select: { yearID: true, teamID: true, BPF: true, PPF: true },
+  });
+  for (const t of teamRows) {
+    parkFactorMap.set(`${t.yearID}|${t.teamID}`, { BPF: t.BPF ?? 100, PPF: t.PPF ?? 100 });
+  }
+
   return {
     player,
     batting,
@@ -205,6 +243,8 @@ async function getPlayerData(id: string) {
     playerWAR,
     collegePlaying,
     jerseyHistory,
+    leagueAvgMap,
+    parkFactorMap,
   };
 }
 
@@ -233,6 +273,8 @@ export default async function PlayerPage({ params }: Props) {
     playerWAR,
     collegePlaying,
     jerseyHistory,
+    leagueAvgMap,
+    parkFactorMap,
   } = data;
 
   const isBatter = batting.length > 0;
@@ -371,6 +413,30 @@ export default async function PlayerPage({ params }: Props) {
     0
   );
   const isRetired = player.finalGame != null && lastActiveYear < currentYear - 1;
+
+  // Helper to compute OPS+ for a batting row
+  function computeOpsPlus(row: { yearID: number; lgID: string | null; teamID: string | null; H?: number | null; BB?: number | null; HBP?: number | null; AB?: number | null; SF?: number | null; doubles?: number | null; triples?: number | null; HR?: number | null }): number | null {
+    const key = `${row.yearID}|${row.lgID}`;
+    const lg = leagueAvgMap.get(key);
+    const pf = parkFactorMap.get(`${row.yearID}|${row.teamID}`);
+    if (!lg || lg.OBP == null || lg.SLG == null) return null;
+    const playerOBP = onBasePct(row.H || 0, row.BB || 0, row.HBP || 0, row.AB || 0, row.SF || 0);
+    const playerSLG = sluggingPct(row.H || 0, row.doubles || 0, row.triples || 0, row.HR || 0, row.AB || 0);
+    if (playerOBP == null || playerSLG == null) return null;
+    return opsPlus(playerOBP, playerSLG, lg.OBP, lg.SLG, pf?.BPF ?? 100);
+  }
+
+  // Helper to compute ERA+ for a pitching row
+  function computeEraPlus(row: { yearID: number; lgID: string | null; teamID: string | null; ER?: number | null; IPouts?: number | null }): number | null {
+    const key = `${row.yearID}|${row.lgID}`;
+    const lg = leagueAvgMap.get(key);
+    const pf = parkFactorMap.get(`${row.yearID}|${row.teamID}`);
+    if (!lg || lg.ERA == null) return null;
+    const ip = row.IPouts || 0;
+    const playerERA = era(row.ER || 0, ip);
+    if (playerERA == null || playerERA === 0) return null;
+    return eraPlus(playerERA, lg.ERA, pf?.PPF ?? 100);
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -619,7 +685,7 @@ export default async function PlayerPage({ params }: Props) {
                       {[
                         "Year", "Team", "Lg", "G", "PA", "AB", "R", "H",
                         "2B", "3B", "HR", "RBI", "SB", "CS", "BB", "SO",
-                        "BA", "OBP", "SLG", "OPS", "TB", "GIDP", "HBP",
+                        "BA", "OBP", "SLG", "OPS", "OPS+", "TB", "GIDP", "HBP",
                         "SH", "SF", "IBB", "WAR",
                       ].map((col) => (
                         <th
@@ -646,6 +712,7 @@ export default async function PlayerPage({ params }: Props) {
                       const opsVal = ops(obp, slg);
                       const tb = totalBases(row.H || 0, row.doubles || 0, row.triples || 0, row.HR || 0);
                       const war = warByYear[row.yearID];
+                      const opsPlusVal = computeOpsPlus(row);
 
                       return (
                         <tr key={`${row.yearID}-${row.stint}`}>
@@ -677,6 +744,9 @@ export default async function PlayerPage({ params }: Props) {
                           <td className={TD_RIGHT}>{fmtAvg(obp)}</td>
                           <td className={TD_RIGHT}>{fmtAvg(slg)}</td>
                           <td className={TD_RIGHT_BOLD}>{fmtAvg(opsVal)}</td>
+                          <td className={opsPlusVal != null && opsPlusVal > 120 ? TD_RIGHT_BOLD : TD_RIGHT}>
+                            {opsPlusVal != null ? opsPlusVal : "\u2014"}
+                          </td>
                           <td className={TD_RIGHT}>{tb}</td>
                           <td className={TD_RIGHT}>{row.GIDP}</td>
                           <td className={TD_RIGHT}>{row.HBP}</td>
@@ -710,6 +780,7 @@ export default async function PlayerPage({ params }: Props) {
                       <td className={TD_RIGHT}>{fmtAvg(onBasePct(careerBatting.H, careerBatting.BB, careerBatting.HBP, careerBatting.AB, careerBatting.SF))}</td>
                       <td className={TD_RIGHT}>{fmtAvg(sluggingPct(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR, careerBatting.AB))}</td>
                       <td className={TD_RIGHT}>{fmtAvg(ops(onBasePct(careerBatting.H, careerBatting.BB, careerBatting.HBP, careerBatting.AB, careerBatting.SF), sluggingPct(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR, careerBatting.AB)))}</td>
+                      <td className={TD_RIGHT}></td>
                       <td className={TD_RIGHT}>{totalBases(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR)}</td>
                       <td className={TD_RIGHT}>{careerBatting.GIDP}</td>
                       <td className={TD_RIGHT}>{careerBatting.HBP}</td>
@@ -740,6 +811,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className={TD_RIGHT}>{fmtAvg(onBasePct(careerBatting.H, careerBatting.BB, careerBatting.HBP, careerBatting.AB, careerBatting.SF))}</td>
                         <td className={TD_RIGHT}>{fmtAvg(sluggingPct(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR, careerBatting.AB))}</td>
                         <td className={TD_RIGHT}>{fmtAvg(ops(onBasePct(careerBatting.H, careerBatting.BB, careerBatting.HBP, careerBatting.AB, careerBatting.SF), sluggingPct(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR, careerBatting.AB)))}</td>
+                        <td className={TD_RIGHT}></td>
                         <td className={TD_RIGHT}>{avg162(totalBases(careerBatting.H, careerBatting.doubles, careerBatting.triples, careerBatting.HR))}</td>
                         <td className={TD_RIGHT}>{avg162(careerBatting.GIDP)}</td>
                         <td className={TD_RIGHT}>{avg162(careerBatting.HBP)}</td>
@@ -863,7 +935,7 @@ export default async function PlayerPage({ params }: Props) {
                   <thead>
                     <tr className="border-b border-border">
                       {[
-                        "Year", "Team", "Lg", "W", "L", "ERA", "G", "GS",
+                        "Year", "Team", "Lg", "W", "L", "ERA", "ERA+", "G", "GS",
                         "CG", "SHO", "SV", "IP", "H", "R", "ER", "HR",
                         "BB", "SO", "WHIP", "H/9", "HR/9", "BB/9", "SO/9", "SO/BB", "WAR",
                       ].map((col) => (
@@ -893,6 +965,7 @@ export default async function PlayerPage({ params }: Props) {
                       const so9 = perNine(row.SO || 0, ip);
                       const soBb = row.BB && row.BB > 0 ? ((row.SO || 0) / row.BB).toFixed(2) : "\u2014";
                       const war = warByYear[row.yearID];
+                      const eraPlusVal = computeEraPlus(row);
 
                       return (
                         <tr key={`${row.yearID}-${row.stint}`}>
@@ -910,6 +983,9 @@ export default async function PlayerPage({ params }: Props) {
                           <td className={TD_RIGHT}>{row.W}</td>
                           <td className={TD_RIGHT}>{row.L}</td>
                           <td className={TD_RIGHT_BOLD}>{fmtEra(eraVal)}</td>
+                          <td className={eraPlusVal != null && eraPlusVal > 120 ? TD_RIGHT_BOLD : TD_RIGHT}>
+                            {eraPlusVal != null ? eraPlusVal : "\u2014"}
+                          </td>
                           <td className={TD_RIGHT}>{row.G}</td>
                           <td className={TD_RIGHT}>{row.GS}</td>
                           <td className={TD_RIGHT}>{row.CG}</td>
@@ -941,6 +1017,7 @@ export default async function PlayerPage({ params }: Props) {
                       <td className={TD_RIGHT}>{careerPitching.W}</td>
                       <td className={TD_RIGHT}>{careerPitching.L}</td>
                       <td className={TD_RIGHT}>{fmtEra(era(careerPitching.ER, careerPitching.IPouts))}</td>
+                      <td className={TD_RIGHT}></td>
                       <td className={TD_RIGHT}>{careerPitching.G}</td>
                       <td className={TD_RIGHT}>{careerPitching.GS}</td>
                       <td className={TD_RIGHT}>{careerPitching.CG}</td>
@@ -968,6 +1045,7 @@ export default async function PlayerPage({ params }: Props) {
                         <td className={TD_RIGHT}>{avg162(careerPitching.W)}</td>
                         <td className={TD_RIGHT}>{avg162(careerPitching.L)}</td>
                         <td className={TD_RIGHT}>{fmtEra(era(careerPitching.ER, careerPitching.IPouts))}</td>
+                        <td className={TD_RIGHT}></td>
                         <td className={TD_RIGHT}>162</td>
                         <td className={TD_RIGHT}>{avg162(careerPitching.GS)}</td>
                         <td className={TD_RIGHT}>{avg162(careerPitching.CG)}</td>
