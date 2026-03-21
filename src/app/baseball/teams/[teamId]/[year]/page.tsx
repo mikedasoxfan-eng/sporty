@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { TeamLogo } from "@/components/ui/TeamLogo";
 import {
   fmtAvg,
   fmtEra,
@@ -441,7 +442,8 @@ export default async function TeamSeasonPage({ params }: Props) {
                 ? `${team.divID === "E" ? "East" : team.divID === "C" ? "Central" : "West"}`
                 : ""}
             </p>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter flex items-center gap-3">
+              <TeamLogo teamID={teamId} size={40} />
               {team.name}{" "}
               <span className="text-muted">{year}</span>
             </h1>

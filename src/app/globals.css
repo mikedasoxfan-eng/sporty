@@ -42,8 +42,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark mode: system preference OR explicit toggle */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0a0a0a;
     --foreground: #e5e5e5;
     --accent: #ef4444;
@@ -62,6 +63,27 @@
     --link: #f87171;
     --link-hover: #ef4444;
   }
+}
+
+/* Explicit dark mode toggle */
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #e5e5e5;
+  --accent: #ef4444;
+  --accent-light: #f87171;
+  --accent-dark: #dc2626;
+  --surface: #171717;
+  --surface-alt: #262626;
+  --border: #262626;
+  --border-light: #1a1a1a;
+  --muted: #a3a3a3;
+  --muted-light: #737373;
+  --header-bg: #991b1b;
+  --header-fg: #ffffff;
+  --table-header-bg: #262626;
+  --table-header-fg: #e5e5e5;
+  --link: #f87171;
+  --link-hover: #ef4444;
 }
 
 body {

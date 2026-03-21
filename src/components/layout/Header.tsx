@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navLinks = [
   { href: "/baseball", label: "Baseball" },
@@ -14,7 +15,6 @@ const navLinks = [
 export function Header() {
   return (
     <header className="sticky top-0 z-40">
-      {/* Primary red bar */}
       <div className="bg-header-bg text-header-fg">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12">
@@ -37,8 +37,11 @@ export function Header() {
                 ))}
               </nav>
             </div>
-            <div className="w-full max-w-xs">
-              <SearchBar />
+            <div className="flex items-center gap-3">
+              <div className="w-full max-w-xs">
+                <SearchBar />
+              </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>
