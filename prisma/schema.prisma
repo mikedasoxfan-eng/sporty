@@ -1,0 +1,758 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// LAHMAN DATABASE TABLES
+// ============================================================
+
+model People {
+  playerID     String  @id
+  birthYear    Int?
+  birthMonth   Int?
+  birthDay     Int?
+  birthCountry String?
+  birthState   String?
+  birthCity    String?
+  deathYear    Int?
+  deathMonth   Int?
+  deathDay     Int?
+  deathCountry String?
+  deathState   String?
+  deathCity    String?
+  nameFirst    String?
+  nameLast     String?
+  nameGiven    String?
+  weight       Int?
+  height       Int?
+  bats         String?
+  throws       String?
+  debut        String?
+  finalGame    String?
+  retroID      String?
+  bbrefID      String?
+
+  batting         Batting[]
+  pitching        Pitching[]
+  fielding        Fielding[]
+  appearances     Appearances[]
+  battingPost     BattingPost[]
+  pitchingPost    PitchingPost[]
+  fieldingPost    FieldingPost[]
+  allstarFull     AllstarFull[]
+  hallOfFame      HallOfFame[]
+  awardsPlayers   AwardsPlayers[]
+  awardsShare     AwardsSharePlayers[]
+  salaries        Salaries[]
+  collegePlaying  CollegePlaying[]
+  managers        Managers[]
+  fieldingOF      FieldingOF[]
+  fieldingOFsplit FieldingOFsplit[]
+
+  @@index([nameLast, nameFirst])
+  @@index([bbrefID])
+  @@index([retroID])
+}
+
+model Batting {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  stint    Int
+  teamID   String
+  lgID     String?
+  G        Int?
+  AB       Int?
+  R        Int?
+  H        Int?
+  doubles  Int?    @map("2B")
+  triples  Int?    @map("3B")
+  HR       Int?
+  RBI      Int?
+  SB       Int?
+  CS       Int?
+  BB       Int?
+  SO       Int?
+  IBB      Int?
+  HBP      Int?
+  SH       Int?
+  SF       Int?
+  GIDP     Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, stint])
+  @@index([yearID, teamID])
+  @@index([teamID, yearID])
+  @@index([playerID, yearID])
+}
+
+model Pitching {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  stint    Int
+  teamID   String
+  lgID     String?
+  W        Int?
+  L        Int?
+  G        Int?
+  GS       Int?
+  CG       Int?
+  SHO      Int?
+  SV       Int?
+  IPouts   Int?
+  H        Int?
+  ER       Int?
+  HR       Int?
+  BB       Int?
+  SO       Int?
+  BAOpp    Float?
+  ERA      Float?
+  IBB      Int?
+  WP       Int?
+  HBP      Int?
+  BK       Int?
+  BFP      Int?
+  GF       Int?
+  R        Int?
+  SH       Int?
+  SF       Int?
+  GIDP     Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, stint])
+  @@index([yearID, teamID])
+  @@index([playerID, yearID])
+}
+
+model Fielding {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  stint    Int
+  teamID   String
+  lgID     String?
+  POS      String
+  G        Int?
+  GS       Int?
+  InnOuts  Int?
+  PO       Int?
+  A        Int?
+  E        Int?
+  DP       Int?
+  PB       Int?
+  WP       Int?
+  SB       Int?
+  CS       Int?
+  ZR       Float?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, stint, POS])
+  @@index([yearID, teamID])
+  @@index([playerID, yearID])
+}
+
+model FieldingOF {
+  id       Int    @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  stint    Int
+  Glf      Int?
+  Gcf      Int?
+  Grf      Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, stint])
+}
+
+model FieldingOFsplit {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  stint    Int
+  teamID   String?
+  lgID     String?
+  POS      String
+  G        Int?
+  GS       Int?
+  InnOuts  Int?
+  PO       Int?
+  A        Int?
+  E        Int?
+  DP       Int?
+  PB       Int?
+  WP       Int?
+  SB       Int?
+  CS       Int?
+  ZR       Float?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, stint, POS])
+}
+
+model Teams {
+  id           Int     @id @default(autoincrement())
+  yearID       Int
+  lgID         String
+  teamID       String
+  franchID     String?
+  divID        String?
+  Rank         Int?
+  G            Int?
+  Ghome        Int?
+  W            Int?
+  L            Int?
+  DivWin       String?
+  WCWin        String?
+  LgWin        String?
+  WSWin        String?
+  R            Int?
+  AB           Int?
+  H            Int?
+  doubles      Int?
+  triples      Int?
+  HR           Int?
+  BB           Int?
+  SO           Int?
+  SB           Int?
+  CS           Int?
+  HBP          Int?
+  SF           Int?
+  RA           Int?
+  ER           Int?
+  ERA          Float?
+  CG           Int?
+  SHO          Int?
+  SV           Int?
+  IPouts       Int?
+  HA           Int?
+  HRA          Int?
+  BBA          Int?
+  SOA          Int?
+  E            Int?
+  DP           Int?
+  FP           Float?
+  name         String?
+  park         String?
+  attendance   Int?
+  BPF          Int?
+  PPF          Int?
+  teamIDBR     String?
+  teamIDlahman45 String?
+  teamIDretro  String?
+
+  franchise TeamsFranchises? @relation(fields: [franchID], references: [franchID])
+
+  @@unique([yearID, lgID, teamID])
+  @@index([teamID, yearID])
+  @@index([franchID])
+  @@index([yearID])
+}
+
+model TeamsFranchises {
+  franchID   String  @id
+  franchName String?
+  active     String?
+  NAassoc    String?
+
+  teams Teams[]
+}
+
+model TeamsHalf {
+  id      Int     @id @default(autoincrement())
+  yearID  Int
+  lgID    String
+  teamID  String
+  Half    String
+  divID   String?
+  DivWin  String?
+  Rank    Int?
+  G       Int?
+  W       Int?
+  L       Int?
+
+  @@unique([yearID, lgID, teamID, Half])
+}
+
+model Appearances {
+  id         Int    @id @default(autoincrement())
+  yearID     Int
+  teamID     String
+  lgID       String?
+  playerID   String
+  G_all      Int?
+  GS         Int?
+  G_batting  Int?
+  G_defense  Int?
+  G_p        Int?
+  G_c        Int?
+  G_1b       Int?
+  G_2b       Int?
+  G_3b       Int?
+  G_ss       Int?
+  G_lf       Int?
+  G_cf       Int?
+  G_rf       Int?
+  G_of       Int?
+  G_dh       Int?
+  G_ph       Int?
+  G_pr       Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([yearID, teamID, playerID])
+  @@index([playerID, yearID])
+}
+
+model AllstarFull {
+  id          Int     @id @default(autoincrement())
+  playerID    String
+  yearID      Int
+  gameNum     Int?
+  gameID      String?
+  teamID      String?
+  lgID        String?
+  GP          Int?
+  startingPos Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@index([playerID])
+  @@index([yearID])
+}
+
+model HallOfFame {
+  id          Int     @id @default(autoincrement())
+  playerID    String
+  yearid      Int
+  votedBy     String?
+  ballots     Int?
+  needed      Int?
+  votes       Int?
+  inducted    String?
+  category    String?
+  needed_note String?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@index([playerID])
+  @@index([inducted])
+}
+
+model AwardsPlayers {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  awardID  String
+  yearID   Int
+  lgID     String?
+  tie      String?
+  notes    String?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, awardID, yearID, lgID])
+  @@index([playerID])
+  @@index([yearID])
+}
+
+model AwardsManagers {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  awardID  String
+  yearID   Int
+  lgID     String?
+  tie      String?
+  notes    String?
+
+  @@unique([playerID, awardID, yearID, lgID])
+}
+
+model AwardsSharePlayers {
+  id         Int     @id @default(autoincrement())
+  awardID    String
+  yearID     Int
+  lgID       String
+  playerID   String
+  pointsWon  Float?
+  pointsMax  Int?
+  votesFirst Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([awardID, yearID, lgID, playerID])
+  @@index([playerID])
+}
+
+model AwardsShareManagers {
+  id         Int     @id @default(autoincrement())
+  awardID    String
+  yearID     Int
+  lgID       String
+  playerID   String
+  pointsWon  Float?
+  pointsMax  Int?
+  votesFirst Int?
+
+  @@unique([awardID, yearID, lgID, playerID])
+}
+
+model Salaries {
+  id       Int     @id @default(autoincrement())
+  yearID   Int
+  teamID   String
+  lgID     String
+  playerID String
+  salary   Float?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([yearID, teamID, lgID, playerID])
+  @@index([playerID])
+}
+
+model BattingPost {
+  id       Int     @id @default(autoincrement())
+  yearID   Int
+  round    String
+  playerID String
+  teamID   String?
+  lgID     String?
+  G        Int?
+  AB       Int?
+  R        Int?
+  H        Int?
+  doubles  Int?
+  triples  Int?
+  HR       Int?
+  RBI      Int?
+  SB       Int?
+  CS       Int?
+  BB       Int?
+  SO       Int?
+  IBB      Int?
+  HBP      Int?
+  SH       Int?
+  SF       Int?
+  GIDP     Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([yearID, round, playerID])
+  @@index([playerID])
+}
+
+model PitchingPost {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  round    String
+  teamID   String?
+  lgID     String?
+  W        Int?
+  L        Int?
+  G        Int?
+  GS       Int?
+  CG       Int?
+  SHO      Int?
+  SV       Int?
+  IPouts   Int?
+  H        Int?
+  ER       Int?
+  HR       Int?
+  BB       Int?
+  SO       Int?
+  BAOpp    Float?
+  ERA      Float?
+  IBB      Int?
+  WP       Int?
+  HBP      Int?
+  BK       Int?
+  BFP      Int?
+  GF       Int?
+  R        Int?
+  SH       Int?
+  SF       Int?
+  GIDP     Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, round])
+  @@index([playerID])
+}
+
+model FieldingPost {
+  id       Int     @id @default(autoincrement())
+  playerID String
+  yearID   Int
+  teamID   String?
+  lgID     String?
+  round    String
+  POS      String
+  G        Int?
+  GS       Int?
+  InnOuts  Int?
+  PO       Int?
+  A        Int?
+  E        Int?
+  DP       Int?
+  TP       Int?
+  PB       Int?
+  SB       Int?
+  CS       Int?
+
+  player People @relation(fields: [playerID], references: [playerID])
+
+  @@unique([playerID, yearID, round, POS])
+  @@index([playerID])
+}
+
+model SeriesPost {
+  id           Int     @id @default(autoincrement())
+  yearID       Int
+  round        String
+  teamIDwinner String?
+  lgIDwinner   String?
+  teamIDloser  String?
+  lgIDloser    String?
+  wins         Int?
+  losses       Int?
+  ties         Int?
+
+  @@unique([yearID, round])
+  @@index([yearID])
+}
+
+model Managers {
+  id       Int     @id @default(autoincrement())
+  playerID String?
+  yearID   Int
+  teamID   String
+  lgID     String?
+  inseason Int
+  G        Int?
+  W        Int?
+  L        Int?
+  rank     Int?
+  plyrMgr  String?
+
+  player People? @relation(fields: [playerID], references: [playerID])
+
+  @@unique([yearID, teamID, inseason])
+  @@index([playerID])
+}
+
+model ManagersHalf {
+  id       Int     @id @default(autoincrement())
+  playerID String?
+  yearID   Int
+  teamID   String
+  lgID     String?
+  inseason Int
+  half     Int
+  G        Int?
+  W        Int?
+  L        Int?
+  rank     Int?
+
+  @@unique([yearID, teamID, inseason, half])
+}
+
+model Parks {
+  parkKey   String  @id @map("park_key")
+  parkName  String? @map("park_name")
+  parkAlias String? @map("park_alias")
+  city      String?
+  state     String?
+  country   String?
+
+  homeGames HomeGames[]
+}
+
+model HomeGames {
+  id         Int     @id @default(autoincrement())
+  yearKey    Int     @map("year_key")
+  leagueKey  String  @map("league_key")
+  teamKey    String  @map("team_key")
+  parkKey    String  @map("park_key")
+  spanFirst  String? @map("span_first")
+  spanLast   String? @map("span_last")
+  games      Int?
+  openings   Int?
+  attendance Int?
+
+  park Parks @relation(fields: [parkKey], references: [parkKey])
+
+  @@unique([yearKey, leagueKey, teamKey, parkKey])
+}
+
+model Schools {
+  schoolID  String  @id
+  name_full String?
+  city      String?
+  state     String?
+  country   String?
+
+  collegePlaying CollegePlaying[]
+}
+
+model CollegePlaying {
+  id       Int    @id @default(autoincrement())
+  playerID String
+  schoolID String
+  yearID   Int?
+
+  player People  @relation(fields: [playerID], references: [playerID])
+  school Schools @relation(fields: [schoolID], references: [schoolID])
+
+  @@index([playerID])
+  @@index([schoolID])
+}
+
+// ============================================================
+// RETROSHEET GAME LOGS
+// ============================================================
+
+model GameLog {
+  id              Int     @id @default(autoincrement())
+  date            String
+  gameNumber      String?
+  dayOfWeek       String?
+  visitingTeam    String?
+  visitingLeague  String?
+  visitingGameNum Int?
+  homeTeam        String?
+  homeLeague      String?
+  homeGameNum     Int?
+  visitingScore   Int?
+  homeScore       Int?
+  lengthOuts      Int?
+  dayNight        String?
+  completionInfo  String?
+  forfeitInfo     String?
+  protestInfo     String?
+  parkID          String?
+  attendance      Int?
+  timeOfGame      Int?
+  visitingLine    String?
+  homeLine        String?
+
+  // Visiting team offense
+  vAB  Int?
+  vH   Int?
+  v2B  Int?
+  v3B  Int?
+  vHR  Int?
+  vRBI Int?
+  vSH  Int?
+  vSF  Int?
+  vHBP Int?
+  vBB  Int?
+  vIBB Int?
+  vSO  Int?
+  vSB  Int?
+  vCS  Int?
+  vGDP Int?
+  vCI  Int?
+  vLOB Int?
+
+  // Visiting team pitching
+  vPitchersUsed Int?
+  vIndividualER Int?
+  vTeamER       Int?
+  vWP           Int?
+  vBalks        Int?
+
+  // Visiting team defense
+  vPO Int?
+  vA  Int?
+  vE  Int?
+  vPB Int?
+  vDP Int?
+  vTP Int?
+
+  // Home team offense
+  hAB  Int?
+  hH   Int?
+  h2B  Int?
+  h3B  Int?
+  hHR  Int?
+  hRBI Int?
+  hSH  Int?
+  hSF  Int?
+  hHBP Int?
+  hBB  Int?
+  hIBB Int?
+  hSO  Int?
+  hSB  Int?
+  hCS  Int?
+  hGDP Int?
+  hCI  Int?
+  hLOB Int?
+
+  // Home team pitching
+  hPitchersUsed Int?
+  hIndividualER Int?
+  hTeamER       Int?
+  hWP           Int?
+  hBalks        Int?
+
+  // Home team defense
+  hPO Int?
+  hA  Int?
+  hE  Int?
+  hPB Int?
+  hDP Int?
+  hTP Int?
+
+  // Umpires
+  hpUmpireId        String?
+  hpUmpireName      String?
+  firstBUmpireId    String?
+  firstBUmpireName  String?
+  secondBUmpireId   String?
+  secondBUmpireName String?
+  thirdBUmpireId    String?
+  thirdBUmpireName  String?
+
+  // Managers
+  vManagerId   String?
+  vManagerName String?
+  hManagerId   String?
+  hManagerName String?
+
+  // Key pitchers
+  wpId        String?
+  wpName      String?
+  lpId        String?
+  lpName      String?
+  svId        String?
+  svName      String?
+  gwRBIId     String?
+  gwRBIName   String?
+  vStartPId   String?
+  vStartPName String?
+  hStartPId   String?
+  hStartPName String?
+
+  // Starting lineups stored as JSON for compactness
+  vLineup String? // JSON array of {id, name, pos}
+  hLineup String? // JSON array of {id, name, pos}
+
+  additionalInfo  String?
+  acquisitionInfo String?
+
+  @@index([date])
+  @@index([homeTeam, date])
+  @@index([visitingTeam, date])
+  @@index([parkID])
+}
