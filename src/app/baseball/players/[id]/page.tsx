@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/db";
+import { PlayerPortrait } from "@/components/ui/PlayerPortrait";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import {
   fmtAvg,
   fmtEra,
@@ -32,30 +33,6 @@ import {
 } from "@/lib/stats";
 import { StatCard } from "@/components/ui/StatCard";
 import type { Metadata } from "next";
-
-/* ------------------------------------------------------------------ */
-/*  Country flag lookup                                                */
-/* ------------------------------------------------------------------ */
-const FLAG: Record<string, string> = {
-  USA: "\u{1F1FA}\u{1F1F8}",
-  "D.R.": "\u{1F1E9}\u{1F1F4}",
-  Venezuela: "\u{1F1FB}\u{1F1EA}",
-  Cuba: "\u{1F1E8}\u{1F1FA}",
-  "P.R.": "\u{1F1F5}\u{1F1F7}",
-  Japan: "\u{1F1EF}\u{1F1F5}",
-  Korea: "\u{1F1F0}\u{1F1F7}",
-  Mexico: "\u{1F1F2}\u{1F1FD}",
-  Canada: "\u{1F1E8}\u{1F1E6}",
-  Panama: "\u{1F1F5}\u{1F1E6}",
-  Colombia: "\u{1F1E8}\u{1F1F4}",
-  Nicaragua: "\u{1F1F3}\u{1F1EE}",
-  Curacao: "\u{1F1E8}\u{1F1FC}",
-  Taiwan: "\u{1F1F9}\u{1F1FC}",
-  Australia: "\u{1F1E6}\u{1F1FA}",
-  Netherlands: "\u{1F1F3}\u{1F1F1}",
-  Brazil: "\u{1F1E7}\u{1F1F7}",
-  Germany: "\u{1F1E9}\u{1F1EA}",
-};
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -377,10 +354,14 @@ export default async function PlayerPage({ params }: Props) {
       )
     : null;
 
-  // Portrait URL
-  const portraitUrl = player.mlbamID
-    ? `https://img.mlb.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${player.mlbamID}/headshot/67/current`
-    : null;
+  // Determine if player is retired (finalGame set and not in recent years)
+  const currentYear = new Date().getFullYear();
+  const lastActiveYear = Math.max(
+    ...batting.map((b) => b.yearID),
+    ...pitching.map((p) => p.yearID),
+    0
+  );
+  const isRetired = player.finalGame != null && lastActiveYear < currentYear - 1;
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -391,24 +372,12 @@ export default async function PlayerPage({ params }: Props) {
       <section className="mb-10">
         <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
           {/* Portrait */}
-          <div className="flex-shrink-0">
-            {portraitUrl ? (
-              <Image
-                src={portraitUrl}
-                alt={fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix)}
-                width={213}
-                height={213}
-                unoptimized
-                className="rounded-lg border border-border bg-surface object-cover"
-              />
-            ) : (
-              <div className="w-[213px] h-[213px] rounded-lg border border-border bg-surface flex items-center justify-center">
-                <span className="text-5xl text-muted-light">
-                  {(player.nameFirst?.[0] || "") + (player.nameLast?.[0] || "")}
-                </span>
-              </div>
-            )}
-          </div>
+          <PlayerPortrait
+            mlbamID={player.mlbamID}
+            playerID={player.playerID}
+            name={fullName(player.nameFirst, player.nameLast, player.nameGiven, player.nameSuffix)}
+            initials={(player.nameFirst?.[0] || "") + (player.nameLast?.[0] || "")}
+          />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
@@ -496,7 +465,7 @@ export default async function PlayerPage({ params }: Props) {
                   {player.birthCity && `, ${player.birthCity}`}
                   {player.birthState && `, ${player.birthState}`}
                   {player.birthCountry && (
-                    <> {FLAG[player.birthCountry] || player.birthCountry}</>
+                    <> <CountryFlag country={player.birthCountry} /></>
                   )}
                 </span>
               )}
@@ -517,7 +486,7 @@ export default async function PlayerPage({ params }: Props) {
                   {player.debut}
                 </span>
               )}
-              {player.finalGame && (
+              {isRetired && player.finalGame && (
                 <span>
                   <span className="text-xs uppercase tracking-wider text-muted-light">Final Game</span>{" "}
                   {player.finalGame}
