@@ -8,17 +8,49 @@ function formatYear(dateStr: string | null): string {
   return dateStr.slice(0, 4);
 }
 
-// MLB team abbreviations only — all current + historical franchises
-// Uses the abbreviations the MLB Stats API returns
-const MLB_TEAMS = new Set([
-  // Current 30 teams (API abbreviations)
-  "ARI","ATL","BAL","BOS","CHC","CIN","CLE","COL","CWS","DET",
-  "HOU","KC","LAA","LAD","MIA","MIL","MIN","NYM","NYY","OAK",
-  "PHI","PIT","SD","SEA","SF","STL","TB","TEX","TOR","WSH",
-  // Historical / alternate abbreviations
-  "ANA","CHA","CHN","FLA","FLO","KCA","LAN","MON","NYA","NYN",
-  "SDN","SFN","SLN","TBA","WAS","WSN",
-]);
+/**
+ * Determine if a team abbreviation is an MLB team.
+ * Instead of whitelisting 250+ historical abbreviations, we blacklist
+ * known minor league patterns from the MLB Stats API rosterEntries.
+ */
+function isMLBTeam(abbr: string | null): boolean {
+  if (!abbr) return true; // null = primaryNumber fallback, keep it
+  // MLB Stats API prefixes minor league with league code + dash:
+  // A- (Arizona/rookie), D- (Dominican), F- (Florida), G- (Gulf Coast),
+  // V- (Venezuelan), R- (rookie)
+  if (/^[A-Z]-/.test(abbr)) return false;
+  // 3+ char lowercase-ish abbreviations that are clearly minor league cities
+  // Minor league teams typically have 3-letter city codes not in MLB
+  // Filter by known minor league organizations from the 473 we found:
+  const MINOR_LEAGUE = new Set([
+    "ABD","ABQ","ADE","AGS","AGU","AKL","AKR","ALT","AMA","ARA","ARE",
+    "ARK","ASH","ATH","AUB","AUG","AZ","BAK","BAT","BC","BEL","BG",
+    "BIL","BIR","BLU","BLX","BNG","BOI","BOW","BRD","BRI","BRK","BRS",
+    "BRV","BUF","BUR","CAG","CAM","CAN","CAR","CAS","CC","CHE","CHI",
+    "CHS","CLI","CLR","CLT","CON","COS","CR","CT","CUB","CUL","CW",
+    "CWV","DAN","DAY","DBT","DE","DEL","DOM","DR","DR1","DUN","DUR",
+    "ELP","ELZ","ERI","ESC","EST","EUG","EVE","FAY","FBG","FRE","FRI",
+    "FTM","FW","GAS","GBO","GCR","GDD","GDL","GEE","GIG","GJ","GL",
+    "GRF","GRN","GSV","GTF","GVL","GWN","HAG","HBG","HCS","HD","HEL",
+    "HER","HFD","HIC","HIL","HON","HOW","HP","HV","HVL","IDF","IE",
+    "IND","IOW","JAL","JAM","JAX","JC","JET","JON","JS","JUP","JXN",
+    "KAN","KIN","KNG","KNX","LAG","LAK","LAR","LC","LE","LEO","LEX",
+    "LHV","LI","LIC","LOU","LOW","LV","LWD","LYN","MAG","MAN","MAR",
+    "MAY","MAZ","MB","MEL","MEM","MEX","MID","MIS","MOB","MOC","MOD",
+    "MSS","MTG","MTY","MV","MVA","MXC","MXO","MXR","MXV","NAS","NAV",
+    "NAY","NBR","NEW","NH","NO","NOR","NS","NWA","OAX","OBR","OGD",
+    "OKC","OKL","OMA","ONE","ORI","ORM","OTT","PAN","PAW","PDD","PEJ",
+    "PEO","PER","PES","PMB","PNS","PON","POR","POT","PRN","PUE","PUL",
+    "PUR","QC","QRO","RC","RCT","REA","RIC","RMV","RNO","ROC","ROM",
+    "RR","SA","SAC","SAL","SAN","SAR","SAV","SB","SC","SCO","SI","SJ",
+    "SJU","SK","SL","SLT","SLU","SMD","SOM","SPO","SPR","SRR","STK",
+    "STP","SUG","SUR","SWB","SWM","SYD","SYR","TAB","TAC","TAM","TBT",
+    "TIG","TIJ","TNS","TOL","TRI","TRN","TUC","TUL","USA","VAN","VEN",
+    "VER","VIS","WAI","WCH","WHG","WIC","WIL","WIS","WM","WO","WOR",
+    "WS","WTN","WV","YAK","YOR","YUC","ZUL","RA12",
+  ]);
+  return !MINOR_LEAGUE.has(abbr);
+}
 
 function dedupeEntries(entries: JerseyHistoryEntry[]) {
   const grouped = new Map<
@@ -26,10 +58,7 @@ function dedupeEntries(entries: JerseyHistoryEntry[]) {
     { number: string; abbr: string | null; startYear: string; endYear: string; isActive: boolean }
   >();
   for (const e of entries) {
-    // Skip non-MLB teams (keep null abbr entries — those are primaryNumber fallbacks)
-    if (e.teamAbbr && !MLB_TEAMS.has(e.teamAbbr)) continue;
-    // Skip entries from DSL, AZL, GCL, FCL, ACL and other minor league prefixes
-    if (e.teamAbbr && /^[A-Z]-/.test(e.teamAbbr)) continue;
+    if (!isMLBTeam(e.teamAbbr)) continue;
     const key = `${e.jerseyNumber}-${e.teamAbbr || "?"}`;
     const existing = grouped.get(key);
     const startYear = formatYear(e.startDate);
