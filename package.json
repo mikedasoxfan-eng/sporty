@@ -16,7 +16,10 @@
     "data:enrich": "tsx scripts/enrich-mlb-api.ts",
     "data:enrich:recent": "tsx scripts/enrich-mlb-api.ts --start-year 1990 --end-year 2025",
     "data:enrich:jerseys": "tsx scripts/enrich-jerseys.ts",
-    "data:enrich:jerseys:recent": "tsx scripts/enrich-jerseys.ts --start-year 2000 --end-year 2025"
+    "data:enrich:jerseys:recent": "tsx scripts/enrich-jerseys.ts --start-year 2000 --end-year 2025",
+    "nfl:download": "tsx scripts/nfl-download.ts",
+    "nfl:ingest": "tsx scripts/nfl-ingest.ts",
+    "nfl:pipeline": "tsx scripts/nfl-download.ts && tsx scripts/nfl-ingest.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

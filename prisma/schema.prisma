@@ -806,3 +806,167 @@ model JerseyHistory {
 
   @@index([playerID])
 }
+
+// ============================================================
+// NFL DATA (imported from nflverse)
+// ============================================================
+
+model NFLPlayer {
+  id              String  @id  // gsis_id
+  displayName     String?
+  firstName       String?
+  lastName        String?
+  suffix          String?
+  position        String?
+  positionGroup   String?
+  height          String?
+  weight          Int?
+  birthDate       String?
+  college         String?
+  collegeConf     String?
+  jerseyNumber    Int?
+  rookieSeason    Int?
+  lastSeason      Int?
+  latestTeam      String?
+  status          String?
+  yearsExp        Int?
+  headshot        String?
+  draftYear       Int?
+  draftRound      Int?
+  draftPick       Int?
+  draftTeam       String?
+  pfrId           String?
+  espnId          String?
+
+  passingStats    NFLPlayerStats[]
+  @@index([lastName, firstName])
+  @@index([pfrId])
+}
+
+model NFLTeam {
+  teamAbbr       String  @id
+  teamName       String?
+  teamNick       String?
+  teamConf       String?
+  teamDivision   String?
+  teamColor      String?
+  teamColor2     String?
+  teamLogo       String?
+  teamWordmark   String?
+}
+
+model NFLGame {
+  gameId         String  @id
+  season         Int
+  gameType       String?  // REG, POST, SB
+  week           Int?
+  gameday        String?
+  weekday        String?
+  awayTeam       String?
+  awayScore      Int?
+  homeTeam       String?
+  homeScore      Int?
+  result         Int?     // home perspective
+  overtime       String?
+  awayCoach      String?
+  homeCoach      String?
+  stadium        String?
+  roof           String?
+  surface        String?
+
+  @@index([season, week])
+  @@index([homeTeam, season])
+  @@index([awayTeam, season])
+}
+
+model NFLPlayerStats {
+  id             Int     @id @default(autoincrement())
+  playerId       String
+  season         Int
+  seasonType     String? // REG, POST
+  team           String?
+  position       String?
+  games          Int?
+
+  // Passing
+  completions    Int?
+  passAttempts   Int?
+  passYards      Int?
+  passTds        Int?
+  interceptions  Int?
+  sacks          Int?
+  sackYards      Int?
+  passFirstDowns Int?
+  passEpa        Float?
+
+  // Rushing
+  carries        Int?
+  rushYards      Int?
+  rushTds        Int?
+  rushFirstDowns Int?
+  rushEpa        Float?
+
+  // Receiving
+  receptions     Int?
+  targets        Int?
+  recYards       Int?
+  recTds         Int?
+  recFirstDowns  Int?
+  recEpa         Float?
+
+  // Other
+  fumbles        Int?
+  fumblesLost    Int?
+  specialTeamsTds Int?
+  fantasyPoints  Float?
+  fantasyPointsPpr Float?
+
+  player NFLPlayer @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, season, seasonType])
+  @@index([season, team])
+  @@index([playerId, season])
+}
+
+model NFLDraftPick {
+  id            Int     @id @default(autoincrement())
+  season        Int
+  round         Int
+  pick          Int
+  team          String?
+  gsisId        String?
+  pfrId         String?
+  playerName    String?
+  position      String?
+  college       String?
+  age           Int?
+  hof           Int?     // 1 = HOF inductee
+  allpro        Int?
+  probowls      Int?
+  seasonsStarted Int?
+  careerAV      Int?
+  games         Int?
+
+  @@index([season, round])
+  @@index([gsisId])
+}
+
+model NFLStandings {
+  id            Int     @id @default(autoincrement())
+  season        Int
+  conf          String?
+  division      String?
+  team          String
+  wins          Int?
+  losses        Int?
+  ties          Int?
+  pct           Float?
+  divRank       Int?
+  scored        Int?
+  allowed       Int?
+  seed          Int?
+  playoff       String?
+
+  @@unique([season, team])
+  @@index([season])
+}
