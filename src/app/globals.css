@@ -103,6 +103,17 @@ body {
   z-index: 10;
   background: var(--table-header-bg);
   color: var(--table-header-fg);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.stat-table th:hover {
+  color: var(--accent);
+}
+
+.stat-table th.text-accent {
+  color: var(--accent) !important;
 }
 
 /* BB-ref style links */
