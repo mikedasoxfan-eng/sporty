@@ -144,10 +144,24 @@ function formatDateLong(dateStr: string): string {
 }
 
 async function getGame(gameId: string) {
-  // gameId is the auto-increment integer id
+  // Support both numeric IDs and date-away-home format (e.g. "20241030-LAN-NYA")
   const id = parseInt(gameId, 10);
-  if (isNaN(id)) return null;
-  return prisma.gameLog.findUnique({ where: { id } });
+  if (!isNaN(id) && String(id) === gameId) {
+    return prisma.gameLog.findUnique({ where: { id } });
+  }
+
+  // Parse date-away-home format
+  const parts = gameId.split("-");
+  if (parts.length >= 3) {
+    const date = parts[0];
+    const visitingTeam = parts[1];
+    const homeTeam = parts[2];
+    return prisma.gameLog.findFirst({
+      where: { date, visitingTeam, homeTeam },
+    });
+  }
+
+  return null;
 }
 
 function formatTimeOfGame(minutes: number | null | undefined): string {

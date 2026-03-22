@@ -5,6 +5,17 @@ import { fmtAvg, fmtEra, fullName } from "@/lib/format";
 import type { Metadata } from "next";
 
 /* ------------------------------------------------------------------ */
+/*  MLB team ID -> abbreviation mapping                                */
+/* ------------------------------------------------------------------ */
+const MLB_TEAM_ABBR: Record<number, string> = {
+  108:"LAA",109:"ARI",110:"BAL",111:"BOS",112:"CHC",113:"CIN",114:"CLE",
+  115:"COL",116:"DET",117:"HOU",118:"KC",119:"LAD",120:"WSH",121:"NYM",
+  133:"OAK",134:"PIT",135:"SD",136:"SEA",137:"SF",138:"STL",139:"TB",
+  140:"TEX",141:"TOR",142:"MIN",143:"PHI",144:"ATL",145:"CWS",146:"MIA",
+  147:"NYY",158:"MIL",
+};
+
+/* ------------------------------------------------------------------ */
 /*  Style constants (matching player page)                             */
 /* ------------------------------------------------------------------ */
 const TH_LEFT =
@@ -49,13 +60,12 @@ function buildResultString(split: Split): string {
   const game = split.game;
   if (!game) return "";
   const isHome = split.isHome;
-  const team = split.team?.abbreviation || "";
-  const opponent = split.opponent?.abbreviation || "";
-  // The score is in the game object as gameDate
-  // We can derive W/L from isWin
+  const opponent = split.opponent?.name || "";
+  // Shorten team name: "Oakland Athletics" -> "OAK", "Los Angeles Dodgers" -> "LAD"
+  const oppShort = MLB_TEAM_ABBR[split.opponent?.id] || opponent.split(" ").pop() || "";
   const prefix = isHome ? "vs" : "@";
   const wl = split.isWin ? "W" : "L";
-  return `${wl} ${prefix} ${opponent}`;
+  return `${wl} ${prefix} ${oppShort}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -286,7 +296,7 @@ function BattingGameLog({ splits, season }: { splits: Split[]; season: string })
               return [
                 ...group.splits.map((split: Split, idx: number) => {
                   const stat = split.stat || {};
-                  const opponent = split.opponent?.abbreviation || "";
+                  const opponent = MLB_TEAM_ABBR[split.opponent?.id] || split.opponent?.name?.split(" ").pop() || "";
                   const isHome = split.isHome;
                   const prefix = isHome ? "vs" : "@";
                   const result = buildResultString(split);
