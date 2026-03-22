@@ -593,7 +593,18 @@ export default async function PlayerPage({ params }: Props) {
         {/* 2. Career stat highlight cards                                    */}
         {/* ---------------------------------------------------------------- */}
         <div className="mt-8 flex flex-wrap gap-8">
-          {careerBatting && (
+          {/* For pitchers: show pitching cards first, skip batting cards */}
+          {isPitcher && careerPitching && (
+            <>
+              <StatCard label="ERA" value={fmtEra(era(careerPitching.ER, careerPitching.IPouts))} />
+              <StatCard label="W-L" value={`${careerPitching.W}-${careerPitching.L}`} />
+              <StatCard label="SO" value={fmtInt(careerPitching.SO)} />
+              <StatCard label="IP" value={fmtIP(careerPitching.IPouts)} />
+              <StatCard label="WHIP" value={fmtEra(whip(careerPitching.BB, careerPitching.H, careerPitching.IPouts))} />
+            </>
+          )}
+          {/* For position players: show batting cards */}
+          {!isPitcher && careerBatting && (
             <>
               <StatCard
                 label="AVG"
@@ -614,13 +625,11 @@ export default async function PlayerPage({ params }: Props) {
               <StatCard label="SB" value={fmtInt(careerBatting.SB)} />
             </>
           )}
-          {careerPitching && (
+          {!isPitcher && careerPitching && (
             <>
               <StatCard label="ERA" value={fmtEra(era(careerPitching.ER, careerPitching.IPouts))} />
               <StatCard label="W-L" value={`${careerPitching.W}-${careerPitching.L}`} />
               <StatCard label="SO" value={fmtInt(careerPitching.SO)} />
-              <StatCard label="IP" value={fmtIP(careerPitching.IPouts)} />
-              <StatCard label="WHIP" value={fmtEra(whip(careerPitching.BB, careerPitching.H, careerPitching.IPouts))} />
             </>
           )}
           {playerWAR.length > 0 && (
@@ -662,9 +671,13 @@ export default async function PlayerPage({ params }: Props) {
         </section>
       )}
 
+      {/* Stat sections — reordered for pitchers via CSS order */}
+      <div className="flex flex-col">
+
       {/* =================================================================== */}
       {/* 4. Standard Batting Table                                           */}
       {/* =================================================================== */}
+      <div style={{ order: isPitcher ? 3 : 1 }}>
       {isBatter && careerBatting && (() => {
         const careerPA = plateAppearances(careerBatting.AB, careerBatting.BB, careerBatting.HBP, careerBatting.SH, careerBatting.SF);
         const scaleFactor = careerBatting.G > 0 ? 162 / careerBatting.G : 0;
@@ -826,10 +839,12 @@ export default async function PlayerPage({ params }: Props) {
           </section>
         );
       })()}
+      </div>
 
       {/* =================================================================== */}
       {/* 5. Advanced Batting Table                                           */}
       {/* =================================================================== */}
+      <div style={{ order: isPitcher ? 4 : 2 }}>
       {isBatter && careerBatting && (() => {
         const careerPA = plateAppearances(careerBatting.AB, careerBatting.BB, careerBatting.HBP, careerBatting.SH, careerBatting.SF);
         return (
@@ -914,10 +929,12 @@ export default async function PlayerPage({ params }: Props) {
           </section>
         );
       })()}
+      </div>
 
       {/* =================================================================== */}
       {/* 6. Standard Pitching Table                                          */}
       {/* =================================================================== */}
+      <div style={{ order: isPitcher ? 1 : 3 }}>
       {isPitcher && careerPitching && (() => {
         const scaleFactor = careerPitching.G > 0 ? 162 / careerPitching.G : 0;
         const avg162 = (n: number) => Math.round(n * scaleFactor);
@@ -1067,7 +1084,9 @@ export default async function PlayerPage({ params }: Props) {
           </section>
         );
       })()}
+      </div>
 
+      <div style={{ order: 5 }}>
       {/* =================================================================== */}
       {/* 7. Fielding Stats Table                                             */}
       {/* =================================================================== */}
@@ -1174,6 +1193,9 @@ export default async function PlayerPage({ params }: Props) {
         );
       })()}
 
+      </div>
+
+      <div style={{ order: 6 }}>
       {/* =================================================================== */}
       {/* 8. Appearances by Position                                          */}
       {/* =================================================================== */}
@@ -1239,6 +1261,9 @@ export default async function PlayerPage({ params }: Props) {
         </section>
       )}
 
+      </div>
+
+      <div style={{ order: isPitcher ? 8 : 7 }}>
       {/* =================================================================== */}
       {/* 9. Postseason Batting                                               */}
       {/* =================================================================== */}
@@ -1300,6 +1325,9 @@ export default async function PlayerPage({ params }: Props) {
         </section>
       )}
 
+      </div>
+
+      <div style={{ order: isPitcher ? 2 : 8 }}>
       {/* =================================================================== */}
       {/* 10. Postseason Pitching                                             */}
       {/* =================================================================== */}
@@ -1381,6 +1409,9 @@ export default async function PlayerPage({ params }: Props) {
           </div>
         </section>
       )}
+      </div>
+
+      </div>{/* End of flex reorder container */}
 
       {/* =================================================================== */}
       {/* 11. Hall of Fame Voting                                             */}
