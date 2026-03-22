@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 
 export const metadata = { title: "NFL Teams" };
@@ -121,17 +121,17 @@ export default async function NFLTeamsPage() {
                           >
                             <span className="flex items-center gap-3 flex-1">
                               {team.teamLogo && (
-                                <Image
+                                <img
                                   src={team.teamLogo}
                                   alt={team.teamNick || team.teamAbbr}
                                   width={28}
                                   height={28}
                                   className="w-7 h-7 object-contain"
-                                  unoptimized
-                                />
+                                  
+                               />
                               )}
                               <span className="text-sm font-medium">
-                                {team.teamName} {team.teamNick}
+                                {team.teamName}
                               </span>
                               <span className="text-xs text-muted font-mono">
                                 {team.teamAbbr}

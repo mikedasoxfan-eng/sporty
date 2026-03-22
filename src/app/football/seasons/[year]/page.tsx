@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
 import type { Metadata } from "next";
@@ -82,7 +82,7 @@ async function getSeasonData(year: number) {
       prisma.nFLGame.findMany({
         where: {
           season: year,
-          gameType: { in: ["POST", "SB"] },
+          gameType: { in: ["WC", "DIV", "CON", "SB"] },
         },
         orderBy: [{ week: "asc" }],
       }),
@@ -324,14 +324,14 @@ export default async function NFLSeasonPage({ params }: Props) {
                   <span className="flex-1 text-sm">
                     <span className="flex items-center gap-1">
                       {awayTeam?.teamLogo && (
-                        <Image
+                        <img
                           src={awayTeam.teamLogo}
                           alt={g.awayTeam || ""}
                           width={16}
                           height={16}
                           className="w-4 h-4 object-contain inline"
-                          unoptimized
-                        />
+                          
+                       />
                       )}
                       <Link
                         href={`/football/teams/${g.awayTeam}/${year}`}
@@ -341,14 +341,14 @@ export default async function NFLSeasonPage({ params }: Props) {
                       </Link>
                       <span className="text-muted mx-1">@</span>
                       {homeTeam?.teamLogo && (
-                        <Image
+                        <img
                           src={homeTeam.teamLogo}
                           alt={g.homeTeam || ""}
                           width={16}
                           height={16}
                           className="w-4 h-4 object-contain inline"
-                          unoptimized
-                        />
+                          
+                       />
                       )}
                       <Link
                         href={`/football/teams/${g.homeTeam}/${year}`}
@@ -432,18 +432,18 @@ export default async function NFLSeasonPage({ params }: Props) {
                             >
                               <span className="flex items-center gap-2 flex-1">
                                 {team?.teamLogo && (
-                                  <Image
+                                  <img
                                     src={team.teamLogo}
                                     alt={team.teamNick || s.team}
                                     width={20}
                                     height={20}
                                     className="w-5 h-5 object-contain"
-                                    unoptimized
-                                  />
+                                    
+                                 />
                                 )}
                                 <span className="text-sm font-medium">
                                   {team
-                                    ? `${team.teamName || ""} ${team.teamNick || ""}`.trim()
+                                    ? `${team.teamName || team.teamNick || ""}`.trim()
                                     : s.team}
                                 </span>
                               </span>

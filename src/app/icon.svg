@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <circle cx="16" cy="16" r="15" fill="#ffffff" stroke="#c8102e" stroke-width="2"/>
-  <path d="M16 2.5C16 2.5 14.5 8 14.5 16s1.5 13.5 1.5 13.5" fill="none" stroke="#c8102e" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M12.5 3.5C13 6 13.5 10 14 14" fill="none" stroke="#c8102e" stroke-width="0.8" stroke-linecap="round"/>
-  <path d="M19.5 3.5C19 6 18.5 10 18 14" fill="none" stroke="#c8102e" stroke-width="0.8" stroke-linecap="round"/>
-  <path d="M12.5 28.5C13 26 13.5 22 14 18" fill="none" stroke="#c8102e" stroke-width="0.8" stroke-linecap="round"/>
-  <path d="M19.5 28.5C19 26 18.5 22 18 18" fill="none" stroke="#c8102e" stroke-width="0.8" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4163a"/>
+      <stop offset="100%" stop-color="#a50d25"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="7" ry="7" fill="url(#bg)"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6.5" ry="6.5" fill="none" stroke="white" stroke-opacity="0.15"/>
+  <rect x="1" y="1" width="30" height="1" rx="0.5" fill="white" fill-opacity="0.1"/>
+  <text x="16" y="23" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white" filter="url(#shadow)" letter-spacing="-0.5">s</text>
 </svg>

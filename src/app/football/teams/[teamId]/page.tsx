@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
 import type { Metadata } from "next";
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { teamName: true, teamNick: true },
   });
   return {
-    title: team ? `${team.teamName} ${team.teamNick}` : `${teamId} History`,
+    title: team ? `${team.teamName || team.teamNick}` : `${teamId} History`,
   };
 }
 
@@ -42,7 +42,7 @@ export default async function NFLTeamHistoryPage({ params }: Props) {
 
   const { team, standings } = data;
   const teamName = team
-    ? `${team.teamName || ""} ${team.teamNick || ""}`.trim()
+    ? `${team.teamName || team.teamNick || ""}`.trim()
     : teamId;
 
   return (
@@ -68,14 +68,14 @@ export default async function NFLTeamHistoryPage({ params }: Props) {
       {/* Header */}
       <div className="flex items-center gap-4 mb-10">
         {team?.teamLogo && (
-          <Image
+          <img
             src={team.teamLogo}
             alt={teamName}
             width={64}
             height={64}
             className="w-16 h-16 object-contain"
-            unoptimized
-          />
+            
+         />
         )}
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">

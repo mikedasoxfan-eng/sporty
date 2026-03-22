@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 import { fmtInt, ordinal } from "@/lib/format";
 import { StatCard } from "@/components/ui/StatCard";
@@ -200,14 +200,14 @@ export default async function NFLPlayerPage({ params }: Props) {
         {/* Headshot */}
         <div className="flex-shrink-0">
           {player.headshot ? (
-            <Image
+            <img
               src={player.headshot}
               alt={name}
               width={128}
               height={128}
               className="w-32 h-32 rounded-lg object-cover bg-surface-alt"
-              unoptimized
-            />
+              
+           />
           ) : (
             <div className="w-32 h-32 rounded-lg bg-surface-alt flex items-center justify-center">
               <span className="text-4xl text-muted-light">
@@ -232,7 +232,7 @@ export default async function NFLPlayerPage({ params }: Props) {
                 href={`/football/teams/${team.teamAbbr}`}
                 className={LINK_CLASSES}
               >
-                {team.teamName} {team.teamNick}
+                {team.teamName}
               </Link>
             )}
             {player.status && <span>{player.status}</span>}
@@ -270,14 +270,14 @@ export default async function NFLPlayerPage({ params }: Props) {
 
       {/* Career Stat Cards */}
       <section className="mb-10 flex flex-wrap gap-8">
-        <StatCard label="Games" value={fmtInt(career.games)} />
+        <StatCard label="Games" value={fmtInt(career.games)}/>
         {isQB && (
           <>
             <StatCard
               label="Pass Yards"
               value={fmtInt(career.passYards)}
               sub={`${fmtInt(career.passTds)} TD / ${fmtInt(career.interceptions)} INT`}
-            />
+           />
             <StatCard
               label="Comp %"
               value={
@@ -286,17 +286,17 @@ export default async function NFLPlayerPage({ params }: Props) {
                   : "\u2014"
               }
               sub={`${fmtInt(career.completions)}/${fmtInt(career.passAttempts)}`}
-            />
+           />
             <StatCard
               label="Passer Rating"
               value={careerRating !== null ? careerRating.toFixed(1) : "\u2014"}
-            />
+           />
             {career.rushYards > 0 && (
               <StatCard
                 label="Rush Yards"
                 value={fmtInt(career.rushYards)}
                 sub={`${fmtInt(career.rushTds)} TD`}
-              />
+             />
             )}
           </>
         )}
@@ -306,7 +306,7 @@ export default async function NFLPlayerPage({ params }: Props) {
               label="Rush Yards"
               value={fmtInt(career.rushYards)}
               sub={`${fmtInt(career.rushTds)} TD on ${fmtInt(career.carries)} carries`}
-            />
+           />
             <StatCard
               label="Y/A"
               value={
@@ -314,13 +314,13 @@ export default async function NFLPlayerPage({ params }: Props) {
                   ? (career.rushYards / career.carries).toFixed(1)
                   : "\u2014"
               }
-            />
+           />
             {career.receptions > 0 && (
               <StatCard
                 label="Rec Yards"
                 value={fmtInt(career.recYards)}
                 sub={`${fmtInt(career.receptions)} rec / ${fmtInt(career.recTds)} TD`}
-              />
+             />
             )}
           </>
         )}
@@ -330,12 +330,12 @@ export default async function NFLPlayerPage({ params }: Props) {
               label="Rec Yards"
               value={fmtInt(career.recYards)}
               sub={`${fmtInt(career.recTds)} TD`}
-            />
+           />
             <StatCard
               label="Receptions"
               value={fmtInt(career.receptions)}
               sub={`${fmtInt(career.targets)} targets`}
-            />
+           />
             <StatCard
               label="Y/R"
               value={
@@ -343,26 +343,26 @@ export default async function NFLPlayerPage({ params }: Props) {
                   ? (career.recYards / career.receptions).toFixed(1)
                   : "\u2014"
               }
-            />
+           />
             {career.rushYards > 0 && (
               <StatCard
                 label="Rush Yards"
                 value={fmtInt(career.rushYards)}
                 sub={`${fmtInt(career.rushTds)} TD`}
-              />
+             />
             )}
           </>
         )}
         {!isQB && !isRB && !isWRTE && (
           <>
             {career.passYards > 0 && (
-              <StatCard label="Pass Yards" value={fmtInt(career.passYards)} />
+              <StatCard label="Pass Yards" value={fmtInt(career.passYards)}/>
             )}
             {career.rushYards > 0 && (
-              <StatCard label="Rush Yards" value={fmtInt(career.rushYards)} />
+              <StatCard label="Rush Yards" value={fmtInt(career.rushYards)}/>
             )}
             {career.recYards > 0 && (
-              <StatCard label="Rec Yards" value={fmtInt(career.recYards)} />
+              <StatCard label="Rec Yards" value={fmtInt(career.recYards)}/>
             )}
           </>
         )}
@@ -371,7 +371,7 @@ export default async function NFLPlayerPage({ params }: Props) {
             label="Fumbles"
             value={fmtInt(career.fumbles)}
             sub={`${fmtInt(career.fumblesLost)} lost`}
-          />
+         />
         )}
       </section>
 

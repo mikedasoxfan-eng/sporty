@@ -10,8 +10,7 @@ export function Footer() {
           <div>
             <p className="text-sm font-medium text-foreground mb-3">sporty</p>
             <p className="text-xs text-muted leading-relaxed max-w-[30ch]">
-              Modern sports statistics. Every player, every season, every
-              stat.
+              Modern sports statistics. Every player, every season, every stat.
             </p>
           </div>
           <div>
@@ -23,16 +22,19 @@ export function Footer() {
               <Link href="/baseball/teams" className={linkClass}>Teams</Link>
               <Link href="/baseball/seasons/2025" className={linkClass}>2025 Season</Link>
               <Link href="/baseball/seasons/2025/batting" className={linkClass}>Leaders</Link>
+              <Link href="/baseball/awards" className={linkClass}>Awards</Link>
+              <Link href="/baseball/grid" className={linkClass}>Grid Game</Link>
             </div>
           </div>
           <div>
             <p className="text-xs font-medium text-muted-light uppercase tracking-wider mb-3">
-              Explore
+              Football
             </p>
             <div className="flex flex-col gap-2">
-              <Link href="/baseball/awards" className={linkClass}>Awards</Link>
-              <Link href="/baseball/allstar" className={linkClass}>All-Star Games</Link>
-              <Link href="/baseball/compare" className={linkClass}>Compare Players</Link>
+              <Link href="/football" className={linkClass}>Overview</Link>
+              <Link href="/football/teams" className={linkClass}>Teams</Link>
+              <Link href="/football/seasons/2025" className={linkClass}>2025 Season</Link>
+              <Link href="/football/seasons/2025/passing" className={linkClass}>Leaders</Link>
             </div>
           </div>
           <div>
@@ -46,6 +48,9 @@ export function Footer() {
               <a href="https://www.retrosheet.org/" target="_blank" rel="noopener noreferrer" className={linkClass}>
                 Retrosheet
               </a>
+              <a href="https://github.com/nflverse" target="_blank" rel="noopener noreferrer" className={linkClass}>
+                nflverse
+              </a>
               <a href="https://statsapi.mlb.com" target="_blank" rel="noopener noreferrer" className={linkClass}>
                 MLB Stats API
               </a>
@@ -56,9 +61,9 @@ export function Footer() {
               Coming Soon
             </p>
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-muted-light">Football</span>
               <span className="text-sm text-muted-light">Basketball</span>
               <span className="text-sm text-muted-light">Hockey</span>
+              <span className="text-sm text-muted-light">Soccer</span>
             </div>
           </div>
         </div>
@@ -66,7 +71,7 @@ export function Footer() {
           <p className="retrosheet-credit">
             The information used here was obtained free of charge from and is
             copyrighted by Retrosheet. Lahman Baseball Database is licensed
-            under CC BY-SA 3.0.
+            under CC BY-SA 3.0. NFL data from nflverse, licensed under MIT.
           </p>
         </div>
       </div>

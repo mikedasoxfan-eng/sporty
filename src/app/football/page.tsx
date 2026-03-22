@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
 
@@ -201,18 +201,18 @@ export default async function FootballPage() {
                             >
                               <span className="flex items-center gap-2 flex-1">
                                 {team?.teamLogo && (
-                                  <Image
+                                  <img
                                     src={team.teamLogo}
                                     alt={team.teamNick || s.team}
                                     width={24}
                                     height={24}
                                     className="w-6 h-6 object-contain"
-                                    unoptimized
-                                  />
+                                    
+                                 />
                                 )}
                                 <span className="text-sm font-medium">
                                   {team
-                                    ? `${team.teamName || ""} ${team.teamNick || ""}`.trim()
+                                    ? `${team.teamName || team.teamNick || ""}`.trim()
                                     : s.team}
                                 </span>
                               </span>

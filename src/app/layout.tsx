@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Sporty",
   },
   description:
-    "Modern sports statistics. Every player, every season, every stat — beautifully presented.",
+    "Modern sports statistics — baseball, football, and more. Every player, every season, every stat.",
 };
 
 export default function RootLayout({

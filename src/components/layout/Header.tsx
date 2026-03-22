@@ -4,14 +4,8 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navLinks = [
   { href: "/baseball", label: "Baseball" },
-  { href: "/baseball/teams", label: "Teams" },
-  { href: "/baseball/seasons/2024", label: "Seasons" },
-  { href: "/baseball/seasons/2024/batting", label: "Leaders" },
-  { href: "/baseball/awards", label: "Awards" },
-  { href: "/baseball/allstar", label: "All-Star" },
-  { href: "/baseball/compare", label: "Compare" },
-  { href: "/baseball/grid", label: "Grid" },
   { href: "/football", label: "Football" },
+  { href: "/baseball/grid", label: "Grid" },
 ];
 
 export function Header() {
@@ -27,7 +21,7 @@ export function Header() {
               >
                 sporty
               </Link>
-              <nav className="hidden lg:flex items-center gap-5">
+              <nav className="hidden md:flex items-center gap-5">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+
 import { prisma } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
 import { StatCard } from "@/components/ui/StatCard";
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { teamAbbr: teamId },
     select: { teamName: true, teamNick: true },
   });
-  const name = team ? `${team.teamName} ${team.teamNick}` : teamId;
+  const name = team ? `${team.teamName || team.teamNick}` : teamId;
   return { title: `${name} ${year}` };
 }
 
@@ -139,7 +139,7 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
     data;
 
   const teamName = team
-    ? `${team.teamName || ""} ${team.teamNick || ""}`.trim()
+    ? `${team.teamName || team.teamNick || ""}`.trim()
     : teamId;
 
   const record = standings
@@ -187,7 +187,7 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
 
   // Postseason games
   const postGames = games
-    .filter((g) => g.gameType === "POST" || g.gameType === "SB")
+    .filter((g) => ["WC", "DIV", "CON", "SB"].includes(g.gameType || ""))
     .map((g) => {
       const isHome = g.homeTeam === teamId;
       const opponent = isHome ? g.awayTeam : g.homeTeam;
@@ -243,14 +243,14 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
       {/* Team Header */}
       <div className="flex items-start gap-4 mb-6">
         {team?.teamLogo && (
-          <Image
+          <img
             src={team.teamLogo}
             alt={teamName}
             width={64}
             height={64}
             className="w-16 h-16 object-contain"
-            unoptimized
-          />
+            
+         />
         )}
         <div className="flex-1">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter">
@@ -305,15 +305,15 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
           <StatCard
             label="Record"
             value={record || "\u2014"}
-          />
+         />
           <StatCard
             label="Points Scored"
             value={standings.scored !== null ? fmtInt(standings.scored) : "\u2014"}
-          />
+         />
           <StatCard
             label="Points Allowed"
             value={standings.allowed !== null ? fmtInt(standings.allowed) : "\u2014"}
-          />
+         />
           <StatCard
             label="Point Diff"
             value={
@@ -322,7 +322,7 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
                   (standings.scored - standings.allowed)
                 : "\u2014"
             }
-          />
+         />
         </section>
       )}
 

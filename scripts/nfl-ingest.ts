@@ -80,7 +80,7 @@ async function ingestTeams() {
             teamDivision: toStr(r.team_division),
             teamColor: toStr(r.team_color),
             teamColor2: toStr(r.team_color2),
-            teamLogo: toStr(r.team_logo_wikipedia) || toStr(r.team_logo_squared),
+            teamLogo: toStr(r.team_logo_espn) || toStr(r.team_logo_wikipedia),
             teamWordmark: toStr(r.team_wordmark),
           },
           create: {
@@ -91,7 +91,7 @@ async function ingestTeams() {
             teamDivision: toStr(r.team_division),
             teamColor: toStr(r.team_color),
             teamColor2: toStr(r.team_color2),
-            teamLogo: toStr(r.team_logo_wikipedia) || toStr(r.team_logo_squared),
+            teamLogo: toStr(r.team_logo_espn) || toStr(r.team_logo_wikipedia),
             teamWordmark: toStr(r.team_wordmark),
           },
         })
@@ -552,6 +552,71 @@ async function ingestStandings() {
 /*  Main                                                               */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  2025 season stats (from stats_player format — already aggregated)  */
+/* ------------------------------------------------------------------ */
+async function ingest2025Stats() {
+  console.log("Ingesting 2025 season stats...");
+
+  // Get valid player IDs
+  const validPlayers = new Set(
+    (await prisma.nFLPlayer.findMany({ select: { id: true } })).map((p) => p.id)
+  );
+
+  for (const [file, seasonType] of [
+    ["stats_player_2025_reg.csv", "REG"],
+    ["stats_player_2025_post.csv", "POST"],
+  ] as const) {
+    const rows = readCSV(file);
+    if (rows.length === 0) continue;
+
+    const data = rows
+      .filter((r) => r.player_id && validPlayers.has(r.player_id))
+      .map((r) => ({
+        playerId: r.player_id,
+        season: 2025,
+        seasonType,
+        team: toStr(r.recent_team),
+        position: toStr(r.position),
+        games: toInt(r.games),
+        completions: toInt(r.completions),
+        passAttempts: toInt(r.attempts),
+        passYards: toInt(r.passing_yards),
+        passTds: toInt(r.passing_tds),
+        interceptions: toInt(r.passing_interceptions) || toInt(r.interceptions),
+        sacks: toInt(r.sacks_suffered) || toInt(r.sacks),
+        sackYards: toInt(r.sack_yards_lost) || toInt(r.sack_yards),
+        passFirstDowns: toInt(r.passing_first_downs),
+        passEpa: toFloat(r.passing_epa),
+        carries: toInt(r.carries),
+        rushYards: toInt(r.rushing_yards),
+        rushTds: toInt(r.rushing_tds),
+        rushFirstDowns: toInt(r.rushing_first_downs),
+        rushEpa: toFloat(r.rushing_epa),
+        receptions: toInt(r.receptions),
+        targets: toInt(r.targets),
+        recYards: toInt(r.receiving_yards),
+        recTds: toInt(r.receiving_tds),
+        recFirstDowns: toInt(r.receiving_first_downs),
+        recEpa: toFloat(r.receiving_epa),
+        fumbles: (toInt(r.rushing_fumbles) || 0) + (toInt(r.receiving_fumbles) || 0) + (toInt(r.sack_fumbles) || 0),
+        fumblesLost: (toInt(r.rushing_fumbles_lost) || 0) + (toInt(r.receiving_fumbles_lost) || 0) + (toInt(r.sack_fumbles_lost) || 0),
+        specialTeamsTds: toInt(r.special_teams_tds),
+        fantasyPoints: toFloat(r.fantasy_points),
+        fantasyPointsPpr: toFloat(r.fantasy_points_ppr),
+      }));
+
+    const batch = 500;
+    for (let i = 0; i < data.length; i += batch) {
+      await prisma.nFLPlayerStats.createMany({
+        data: data.slice(i, i + batch),
+        skipDuplicates: true,
+      });
+    }
+    console.log(`  ${file}: ${data.length} records`);
+  }
+}
+
 async function main() {
   console.log("NFL Data Pipeline - Ingest Phase");
   console.log("================================\n");
@@ -569,6 +634,7 @@ async function main() {
   await ingestPlayers();
   await ingestGames();
   await ingestPlayerStats();
+  await ingest2025Stats();
   await ingestDraftPicks();
   await ingestStandings();
 
