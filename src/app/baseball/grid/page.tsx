@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 interface Category {
@@ -47,37 +47,24 @@ function CategoryHeader({ cat, position }: { cat: Category; position: "row" | "c
 
   if (mlbId) {
     return (
-      <div className={`flex ${isRow ? "flex-row" : "flex-col"} items-center gap-1.5`}>
+      <div className={`flex ${isRow ? "flex-col" : "flex-col"} items-center gap-1`}>
         <img
           src={`https://www.mlbstatic.com/team-logos/${mlbId}.svg`}
           alt={cat.label}
-          className="w-9 h-9 md:w-11 md:h-11 drop-shadow-sm"
+          className="w-10 h-10 md:w-12 md:h-12 drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
         />
-        <span className="text-[10px] md:text-xs font-semibold text-foreground tracking-tight">
+        <span className="text-[10px] md:text-[11px] font-semibold text-foreground/80 tracking-tight">
           {cat.label}
         </span>
       </div>
     );
   }
 
-  // Non-team: stat milestones, awards, etc.
-  const isAward = cat.kind === "award" || cat.kind === "allstar" || cat.kind === "hof";
-
+  // Non-team: clean text label, no boxes
   return (
-    <div className={`flex ${isRow ? "flex-row" : "flex-col"} items-center gap-1 px-1`}>
-      {isAward && (
-        <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs md:text-sm">
-            {cat.kind === "hof" ? "\u2605" : cat.kind === "ws_champ" ? "\u2606" : "\u2726"}
-          </span>
-        </div>
-      )}
-      {!isAward && (
-        <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] md:text-xs font-bold text-accent">#</span>
-        </div>
-      )}
-      <span className="text-[9px] md:text-[11px] font-semibold text-center leading-tight max-w-[70px] md:max-w-[90px]">
+    <div className="flex flex-col items-center gap-0.5 px-1">
+      <span className="text-[10px] md:text-xs font-bold text-center leading-tight
+        text-foreground/90 max-w-[70px] md:max-w-[90px]">
         {cat.label}
       </span>
     </div>
@@ -249,125 +236,142 @@ export default function GridPage() {
   }
 
   return (
-    <div className="max-w-[540px] mx-auto px-4 py-6 md:py-10">
+    <div className="max-w-[560px] mx-auto px-4 py-6 md:py-10">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">
           Sporty Grid
         </h1>
-        <p className="text-xs text-muted mt-1.5 font-mono">{grid.gridId}</p>
-        <div className="flex items-center justify-center gap-4 mt-3">
+        <p className="text-[11px] text-muted-light mt-1 font-mono tracking-wider">{grid.gridId}</p>
+        <div className="flex items-center justify-center gap-3 mt-4">
           <GuessDots total={9} remaining={guessesLeft} />
-          <span className="text-xs text-muted">
-            {guessesLeft} remaining
+          <span className="text-[11px] text-muted font-medium">
+            {guessesLeft} left
           </span>
         </div>
       </div>
 
-      {/* The Grid */}
-      <div className="grid grid-cols-[minmax(70px,80px)_1fr_1fr_1fr] gap-[3px] md:gap-1 mb-5">
-        {/* Top-left corner — empty */}
-        <div className="rounded-tl-xl" />
+      {/* The Grid — glassmorphism container */}
+      <div className="relative rounded-2xl overflow-hidden
+        backdrop-blur-sm border border-white/[0.08]
+        shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+        bg-white/[0.03] dark:bg-white/[0.02]">
+        {/* Inner glass refraction border */}
+        <div className="absolute inset-0 rounded-2xl border border-white/[0.06] pointer-events-none z-20" />
 
-        {/* Column headers */}
-        {grid.cols.map((col, ci) => (
-          <div
-            key={ci}
-            className={`flex items-center justify-center py-3 md:py-4 bg-surface-alt
-              ${ci === 2 ? "rounded-tr-xl" : ""}`}
-          >
-            <CategoryHeader cat={col} position="col" />
-          </div>
-        ))}
+        <div className="grid grid-cols-[80px_1fr_1fr_1fr]">
+          {/* Top-left corner */}
+          <div className="h-[72px] md:h-[80px]" />
 
-        {/* Grid body */}
-        {grid.rows.map((row, ri) => (
-          <>
-            {/* Row header */}
+          {/* Column headers — transparent, no box */}
+          {grid.cols.map((col, ci) => (
             <div
-              key={`rh-${ri}`}
-              className={`flex items-center justify-center px-1 bg-surface-alt
-                ${ri === 2 ? "rounded-bl-xl" : ""}`}
+              key={ci}
+              className="h-[72px] md:h-[80px] flex items-center justify-center
+                border-b border-white/[0.06]"
             >
-              <CategoryHeader cat={row} position="row" />
+              <CategoryHeader cat={col} position="col" />
             </div>
+          ))}
 
-            {/* Cells */}
-            {grid.cols.map((_, ci) => {
-              const cell = cells[ri][ci];
-              const isActive = activeCell?.[0] === ri && activeCell?.[1] === ci;
-              const isShaking = shakeCell === `${ri}-${ci}`;
-              const isLastRow = ri === 2;
-              const isLastCol = ci === 2;
-              const cornerClass = isLastRow && isLastCol ? "rounded-br-xl" : "";
+          {/* Grid body */}
+          {grid.rows.map((row, ri) => (
+            <React.Fragment key={`row-${ri}`}>
+              {/* Row header — transparent, no box */}
+              <div className="h-[110px] md:h-[130px] flex items-center justify-center px-2
+                border-r border-white/[0.06]">
+                <CategoryHeader cat={row} position="row" />
+              </div>
 
-              // Correct cell
-              if (cell.status === "correct") {
-                return (
-                  <Link
-                    key={`${ri}-${ci}`}
-                    href={`/baseball/players/${cell.playerID}`}
-                    className={`relative group aspect-square flex flex-col items-center justify-center
-                      bg-green-50 dark:bg-green-950/30 border border-green-200/60 dark:border-green-900/60
-                      overflow-hidden transition-transform hover:scale-[1.02] ${cornerClass}`}
-                  >
-                    {cell.mlbamID ? (
-                      <img
-                        src={`https://midfield.mlbstatic.com/v1/people/${cell.mlbamID}/spots/120`}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-green-100 dark:bg-green-900/40" />
-                    )}
-                    {/* Name overlay at bottom */}
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-1 pb-1 pt-4">
-                      <span className="text-[8px] md:text-[10px] leading-tight font-semibold text-white drop-shadow-sm block text-center">
+              {/* Cells */}
+              {grid.cols.map((_, ci) => {
+                const cell = cells[ri][ci];
+                const isActive = activeCell?.[0] === ri && activeCell?.[1] === ci;
+                const isShaking = shakeCell === `${ri}-${ci}`;
+
+                // Correct cell
+                if (cell.status === "correct") {
+                  return (
+                    <Link
+                      key={`${ri}-${ci}`}
+                      href={`/baseball/players/${cell.playerID}`}
+                      className="relative group h-[110px] md:h-[130px] flex flex-col items-center justify-center
+                        overflow-hidden transition-all duration-300
+                        border-r border-b border-white/[0.04]
+                        hover:brightness-110"
+                    >
+                      {cell.mlbamID ? (
+                        <img
+                          src={`https://midfield.mlbstatic.com/v1/people/${cell.mlbamID}/spots/120`}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover
+                            opacity-90 group-hover:opacity-100 group-hover:scale-105
+                            transition-all duration-500"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-green-500/10" />
+                      )}
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {/* Green check */}
+                      <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-green-500/90
+                        flex items-center justify-center z-10">
+                        <span className="text-white text-[8px] font-bold">{"\u2713"}</span>
+                      </div>
+                      {/* Name */}
+                      <span className="absolute bottom-2 inset-x-1 text-[9px] md:text-[10px]
+                        leading-tight font-semibold text-white text-center z-10
+                        drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                         {cell.playerName}
                       </span>
-                    </div>
-                  </Link>
-                );
-              }
+                    </Link>
+                  );
+                }
 
-              // Empty cell
-              return (
-                <button
-                  key={`${ri}-${ci}`}
-                  onClick={() => {
-                    if (!gameOver) {
-                      setActiveCell([ri, ci]);
-                      setSearchQuery("");
-                      setSearchResults([]);
-                      setError(null);
-                    }
-                  }}
-                  disabled={gameOver}
-                  className={`aspect-square border transition-all duration-200 ${cornerClass}
-                    ${isActive
-                      ? "border-accent bg-accent/8 ring-2 ring-accent/25 scale-[1.03] z-10"
-                      : "border-border bg-surface hover:bg-surface-alt hover:border-muted-light"
-                    }
-                    ${gameOver ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"}
-                    ${isShaking ? "animate-[shake_0.4s_ease-in-out]" : ""}
-                    flex items-center justify-center`}
-                >
-                  {isActive && (
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-dashed border-accent/40 flex items-center justify-center">
-                      <span className="text-sm md:text-base text-accent/60">+</span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </>
-        ))}
+                // Empty cell
+                return (
+                  <button
+                    key={`${ri}-${ci}`}
+                    onClick={() => {
+                      if (!gameOver) {
+                        setActiveCell([ri, ci]);
+                        setSearchQuery("");
+                        setSearchResults([]);
+                        setError(null);
+                      }
+                    }}
+                    disabled={gameOver}
+                    className={`h-[110px] md:h-[130px] transition-all duration-200
+                      border-r border-b border-white/[0.04]
+                      ${isActive
+                        ? "bg-accent/10 shadow-[inset_0_0_20px_rgba(200,16,46,0.1)]"
+                        : "bg-transparent hover:bg-white/[0.03]"
+                      }
+                      ${gameOver ? "opacity-30 cursor-not-allowed" : "cursor-pointer active:scale-[0.97]"}
+                      ${isShaking ? "animate-[shake_0.4s_ease-in-out]" : ""}
+                      flex items-center justify-center`}
+                  >
+                    {isActive && (
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full
+                        border border-accent/30 bg-accent/5
+                        flex items-center justify-center
+                        animate-pulse">
+                        <span className="text-accent/50 text-lg font-light">+</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
       {/* Search panel */}
       {activeCell && !gameOver && (
         <div className="mb-5 animate-[fadeIn_0.15s_ease-out]">
-          <div className="bg-surface border border-border rounded-xl shadow-[0_8px_30px_-10px_rgba(0,0,0,0.12)] overflow-hidden">
+          <div className="backdrop-blur-xl bg-surface/80 border border-white/[0.08] rounded-2xl
+            shadow-[0_8px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.06)] overflow-hidden">
             {/* Search header */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border-light">
               <div className="flex-1 flex items-center gap-2">
@@ -460,8 +464,9 @@ export default function GridPage() {
       {/* Game over overlay */}
       {gameOver && (
         <div className="mb-6 animate-[fadeIn_0.3s_ease-out]">
-          <div className="text-center py-8 px-6 border border-border rounded-2xl bg-surface
-            shadow-[0_8px_30px_-10px_rgba(0,0,0,0.1)]">
+          <div className="text-center py-8 px-6 rounded-2xl
+            backdrop-blur-xl bg-surface/80 border border-white/[0.08]
+            shadow-[0_8px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.06)]">
             {correctCount === 9 ? (
               <>
                 <div className="text-4xl mb-3">9/9</div>
@@ -496,7 +501,8 @@ export default function GridPage() {
                   setError(null);
                 }}
                 className="px-5 py-2.5 text-sm font-medium bg-accent text-white rounded-xl
-                  hover:bg-accent-light active:scale-[0.97] transition-all"
+                  hover:bg-accent-light active:scale-[0.97] transition-all
+                  shadow-[0_2px_12px_rgba(200,16,46,0.3)]"
               >
                 Play Again
               </button>
