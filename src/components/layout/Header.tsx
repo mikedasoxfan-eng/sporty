@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/baseball/awards", label: "Awards" },
   { href: "/baseball/allstar", label: "All-Star" },
   { href: "/baseball/compare", label: "Compare" },
+  { href: "/baseball/grid", label: "Grid" },
 ];
 
 export function Header() {
