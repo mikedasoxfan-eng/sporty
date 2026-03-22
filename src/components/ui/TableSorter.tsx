@@ -78,8 +78,8 @@ export function TableSorter() {
       // Add indicator to active header
       th.classList.add("text-accent");
       const indicator = document.createElement("span");
-      indicator.className = "sort-indicator text-[10px] ml-0.5";
-      indicator.textContent = state.dir === "desc" ? "\u25BC" : "\u25B2";
+      indicator.className = "sort-indicator inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-accent/20 text-accent text-[8px] ml-1 align-middle";
+      indicator.textContent = state.dir === "desc" ? "\u2193" : "\u2191";
       th.querySelector("span")?.appendChild(indicator) ||
         th.appendChild(indicator);
 

@@ -95,6 +95,8 @@ body {
 /* Data table styling */
 .stat-table {
   font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .stat-table th {
@@ -108,12 +110,27 @@ body {
   transition: color 0.15s;
 }
 
+.stat-table th:first-child {
+  border-top-left-radius: 0.5rem;
+}
+
+.stat-table th:last-child {
+  border-top-right-radius: 0.5rem;
+}
+
 .stat-table th:hover {
   color: var(--accent);
 }
 
 .stat-table th.text-accent {
   color: var(--accent) !important;
+}
+
+/* Allow selecting player names and links */
+.stat-table td a,
+.stat-table td .selectable {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* BB-ref style links */
