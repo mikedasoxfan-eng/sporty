@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { getLeagueAverages, opsPlus, eraPlus } from "@/lib/league-averages";
 import { fmtAvg, fmtEra, fmtIP, fmtPct, fullName } from "@/lib/format";
 import {
   battingAvg,
@@ -187,7 +188,8 @@ function battingSortVal(
     IBB?: number | null;
     GIDP?: number | null;
   },
-  sort: string
+  sort: string,
+  opsPlusVal?: number | null
 ): number {
   const pa = plateAppearances(
     row.AB || 0,
@@ -237,6 +239,7 @@ function battingSortVal(
     OBP: obp ?? 0,
     SLG: slg ?? 0,
     OPS: opsVal ?? 0,
+    "OPS+": opsPlusVal ?? 0,
     TB: tb,
     GIDP: row.GIDP || 0,
     HBP: row.HBP || 0,
@@ -264,7 +267,8 @@ function pitchingSortVal(
     BB?: number | null;
     SO?: number | null;
   },
-  sort: string
+  sort: string,
+  eraPlusVal?: number | null
 ): number {
   const ip = row.IPouts || 0;
   const eraVal = era(row.ER || 0, ip);
@@ -293,6 +297,7 @@ function pitchingSortVal(
     "SO/BB": soBb,
     "H/9": perNine(row.H || 0, ip) ?? 99,
     "BB/9": perNine(row.BB || 0, ip) ?? 99,
+    "ERA+": eraPlusVal ?? 0,
   };
 
   // For ERA and WHIP lower is better but we still sort desc by default and flip
@@ -555,9 +560,10 @@ async function BattingTable({
   qualified: boolean;
   sortBy: string;
 }) {
-  const [batters, warMap] = await Promise.all([
+  const [batters, warMap, leagueAvg] = await Promise.all([
     getBattingLeaders(year, qualified),
     getWARData(year),
+    getLeagueAverages(year),
   ]);
 
   if (batters.length === 0) {
@@ -566,7 +572,46 @@ async function BattingTable({
     );
   }
 
-  const sorted = sortRows(batters, (r) => battingSortVal(r, sortBy));
+  // Fetch league averages per league for the year
+  const lgIDs = [...new Set(batters.map((r) => r.lgID).filter(Boolean))] as string[];
+  const leagueAvgByLg = new Map<string, { OBP: number | null; SLG: number | null }>();
+  await Promise.all(
+    lgIDs.map(async (lgID) => {
+      const avg = await getLeagueAverages(year, lgID);
+      leagueAvgByLg.set(lgID, { OBP: avg.OBP, SLG: avg.SLG });
+    })
+  );
+
+  // Fetch park factors for all teams in this year
+  const teamIDs = [...new Set(batters.map((r) => r.teamID).filter(Boolean))] as string[];
+  const teamRows = await prisma.teams.findMany({
+    where: { yearID: year, teamID: { in: teamIDs } },
+    select: { teamID: true, BPF: true },
+  });
+  const bpfMap = new Map<string, number>();
+  for (const t of teamRows) {
+    bpfMap.set(t.teamID, t.BPF ?? 100);
+  }
+
+  // Pre-compute OPS+ for each batter
+  const opsPlusMap = new Map<string, number | null>();
+  for (const row of batters) {
+    const lg = row.lgID ? leagueAvgByLg.get(row.lgID) : null;
+    if (!lg || lg.OBP == null || lg.SLG == null) {
+      opsPlusMap.set(`${row.playerID}-${row.stint}`, null);
+      continue;
+    }
+    const playerOBP = onBasePct(row.H || 0, row.BB || 0, row.HBP || 0, row.AB || 0, row.SF || 0);
+    const playerSLG = sluggingPct(row.H || 0, row.doubles || 0, row.triples || 0, row.HR || 0, row.AB || 0);
+    if (playerOBP == null || playerSLG == null) {
+      opsPlusMap.set(`${row.playerID}-${row.stint}`, null);
+      continue;
+    }
+    const bpf = row.teamID ? (bpfMap.get(row.teamID) ?? 100) : 100;
+    opsPlusMap.set(`${row.playerID}-${row.stint}`, opsPlus(playerOBP, playerSLG, lg.OBP, lg.SLG, bpf));
+  }
+
+  const sorted = sortRows(batters, (r) => battingSortVal(r, sortBy, opsPlusMap.get(`${r.playerID}-${r.stint}`)));
 
   const cols = [
     "#",
@@ -589,6 +634,7 @@ async function BattingTable({
     "OBP",
     "SLG",
     "OPS",
+    "OPS+",
     "TB",
     "GIDP",
     "HBP",
@@ -655,6 +701,7 @@ async function BattingTable({
                 row.HR || 0
               );
               const war = warMap.get(row.playerID);
+              const opsPlusVal = opsPlusMap.get(`${row.playerID}-${row.stint}`);
 
               return (
                 <tr key={`${row.playerID}-${row.stint}`}>
@@ -733,6 +780,9 @@ async function BattingTable({
                   <td className="py-2 px-2.5 text-right font-mono text-xs font-medium">
                     {fmtAvg(ops(obp, slg))}
                   </td>
+                  <td className={`py-2 px-2.5 text-right font-mono text-xs${opsPlusVal != null && opsPlusVal > 120 ? " font-medium" : ""}`}>
+                    {opsPlusVal != null ? opsPlusVal : "\u2014"}
+                  </td>
                   <td className="py-2 px-2.5 text-right font-mono text-xs">
                     {tb}
                   </td>
@@ -772,9 +822,10 @@ async function PitchingTable({
   sortBy: string;
   role?: string;
 }) {
-  const [pitchers, warMap] = await Promise.all([
+  const [pitchers, warMap, leagueAvg] = await Promise.all([
     getPitchingLeaders(year, qualified, role),
     getWARData(year),
+    getLeagueAverages(year),
   ]);
 
   if (pitchers.length === 0) {
@@ -785,7 +836,46 @@ async function PitchingTable({
     );
   }
 
-  const sorted = sortRows(pitchers, (r) => pitchingSortVal(r, sortBy));
+  // Fetch league averages per league for the year
+  const lgIDs = [...new Set(pitchers.map((r) => r.lgID).filter(Boolean))] as string[];
+  const leagueAvgByLg = new Map<string, { ERA: number | null }>();
+  await Promise.all(
+    lgIDs.map(async (lgID) => {
+      const avg = await getLeagueAverages(year, lgID);
+      leagueAvgByLg.set(lgID, { ERA: avg.ERA });
+    })
+  );
+
+  // Fetch park factors for all teams in this year
+  const teamIDs = [...new Set(pitchers.map((r) => r.teamID).filter(Boolean))] as string[];
+  const teamRows = await prisma.teams.findMany({
+    where: { yearID: year, teamID: { in: teamIDs } },
+    select: { teamID: true, PPF: true },
+  });
+  const ppfMap = new Map<string, number>();
+  for (const t of teamRows) {
+    ppfMap.set(t.teamID, t.PPF ?? 100);
+  }
+
+  // Pre-compute ERA+ for each pitcher
+  const eraPlusMap = new Map<string, number | null>();
+  for (const row of pitchers) {
+    const lg = row.lgID ? leagueAvgByLg.get(row.lgID) : null;
+    if (!lg || lg.ERA == null) {
+      eraPlusMap.set(`${row.playerID}-${row.stint}`, null);
+      continue;
+    }
+    const ip = row.IPouts || 0;
+    const playerERA = era(row.ER || 0, ip);
+    if (playerERA == null || playerERA === 0) {
+      eraPlusMap.set(`${row.playerID}-${row.stint}`, null);
+      continue;
+    }
+    const ppf = row.teamID ? (ppfMap.get(row.teamID) ?? 100) : 100;
+    eraPlusMap.set(`${row.playerID}-${row.stint}`, eraPlus(playerERA, lg.ERA, ppf));
+  }
+
+  const sorted = sortRows(pitchers, (r) => pitchingSortVal(r, sortBy, eraPlusMap.get(`${r.playerID}-${r.stint}`)));
 
   const cols = [
     "#",
@@ -794,6 +884,7 @@ async function PitchingTable({
     "W",
     "L",
     "ERA",
+    "ERA+",
     "G",
     "GS",
     "CG",
@@ -861,6 +952,7 @@ async function PitchingTable({
                   ? ((row.SO || 0) / row.BB).toFixed(2)
                   : "\u2014";
               const war = warMap.get(row.playerID);
+              const eraPlusVal = eraPlusMap.get(`${row.playerID}-${row.stint}`);
 
               return (
                 <tr key={`${row.playerID}-${row.stint}`}>
@@ -896,6 +988,9 @@ async function PitchingTable({
                   </td>
                   <td className="py-2 px-2.5 text-right font-mono text-xs font-medium">
                     {fmtEra(eraVal)}
+                  </td>
+                  <td className={`py-2 px-2.5 text-right font-mono text-xs${eraPlusVal != null && eraPlusVal > 120 ? " font-medium" : ""}`}>
+                    {eraPlusVal != null ? eraPlusVal : "\u2014"}
                   </td>
                   <td className="py-2 px-2.5 text-right font-mono text-xs">
                     {row.G}
