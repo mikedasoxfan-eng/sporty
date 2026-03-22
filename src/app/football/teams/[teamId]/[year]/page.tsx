@@ -174,6 +174,7 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
         else result = "T";
       }
       return {
+        gameId: g.gameId,
         week: g.week,
         gameday: g.gameday,
         opponent,
@@ -201,6 +202,7 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
         else result = "T";
       }
       return {
+        gameId: g.gameId,
         week: g.week,
         gameday: g.gameday,
         gameType: g.gameType,
@@ -387,9 +389,16 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
                         </span>
                       </td>
                       <td className="py-2 px-3 text-left font-mono text-xs">
-                        {g.teamScore !== null && g.oppScore !== null
-                          ? `${g.teamScore}-${g.oppScore}`
-                          : "\u2014"}
+                        {g.teamScore !== null && g.oppScore !== null ? (
+                          <Link
+                            href={`/football/games/${g.gameId}`}
+                            className={LINK_CLASSES}
+                          >
+                            {g.teamScore}-{g.oppScore}
+                          </Link>
+                        ) : (
+                          "\u2014"
+                        )}
                         {g.overtime && (
                           <span className="text-muted ml-1">(OT)</span>
                         )}
@@ -464,9 +473,16 @@ export default async function NFLTeamSeasonPage({ params }: Props) {
                         </span>
                       </td>
                       <td className="py-2 px-3 text-left font-mono text-xs">
-                        {g.teamScore !== null && g.oppScore !== null
-                          ? `${g.teamScore}-${g.oppScore}`
-                          : "\u2014"}
+                        {g.teamScore !== null && g.oppScore !== null ? (
+                          <Link
+                            href={`/football/games/${g.gameId}`}
+                            className={LINK_CLASSES}
+                          >
+                            {g.teamScore}-{g.oppScore}
+                          </Link>
+                        ) : (
+                          "\u2014"
+                        )}
                         {g.overtime && (
                           <span className="text-muted ml-1">(OT)</span>
                         )}
