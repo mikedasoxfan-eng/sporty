@@ -21,8 +21,8 @@ export function Footer() {
             <div className="flex flex-col gap-2">
               <Link href="/baseball" className={linkClass}>Overview</Link>
               <Link href="/baseball/teams" className={linkClass}>Teams</Link>
-              <Link href="/baseball/seasons/2024" className={linkClass}>2024 Season</Link>
-              <Link href="/baseball/seasons/2024/batting" className={linkClass}>Leaders</Link>
+              <Link href="/baseball/seasons/2025" className={linkClass}>2025 Season</Link>
+              <Link href="/baseball/seasons/2025/batting" className={linkClass}>Leaders</Link>
             </div>
           </div>
           <div>

@@ -251,13 +251,26 @@ export default function GridPage() {
         </div>
       </div>
 
-      {/* The Grid — glassmorphism container */}
+      {/* The Grid — real glass */}
       <div className="relative rounded-2xl overflow-hidden
-        backdrop-blur-sm border border-white/[0.08]
-        shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-        bg-white/[0.03] dark:bg-white/[0.02]">
-        {/* Inner glass refraction border */}
-        <div className="absolute inset-0 rounded-2xl border border-white/[0.06] pointer-events-none z-20" />
+        backdrop-blur-xl border border-white/10
+        shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]
+        bg-white/[0.06] dark:bg-white/[0.04]"
+        style={{ WebkitBackdropFilter: "blur(24px)", backdropFilter: "blur(24px)" }}>
+        {/* Liquid glass texture layers */}
+        {/* Top edge refraction highlight */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none z-20" />
+        {/* Left edge refraction */}
+        <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-white/15 via-transparent to-transparent pointer-events-none z-20" />
+        {/* Subtle grain texture for glass feel */}
+        <div className="absolute inset-0 pointer-events-none z-10 opacity-[0.015] mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          }}
+        />
+        {/* Gradient sheen — liquid refraction */}
+        <div className="absolute inset-0 pointer-events-none z-10
+          bg-gradient-to-br from-white/[0.04] via-transparent to-white/[0.02]" />
 
         <div className="grid grid-cols-[80px_1fr_1fr_1fr]">
           {/* Top-left corner */}
@@ -365,6 +378,19 @@ export default function GridPage() {
             </React.Fragment>
           ))}
         </div>
+
+        {/* How to play — inside the glass card */}
+        <details className="border-t border-white/[0.06]">
+          <summary className="px-4 py-2.5 text-[10px] text-muted-light cursor-pointer
+            hover:text-muted transition-colors select-none">
+            How to play
+          </summary>
+          <div className="px-4 pb-3 text-[10px] text-muted leading-relaxed space-y-1">
+            <p>Select a cell and name a player who matches <strong>both</strong> the row and column.</p>
+            <p>Team + team: played for both. Team + stat: achieved with that team.</p>
+            <p>Each player can only be used once. 9 guesses total.</p>
+          </div>
+        </details>
       </div>
 
       {/* Search panel */}
@@ -517,19 +543,6 @@ export default function GridPage() {
           </div>
         </div>
       )}
-
-      {/* How to play (collapsed) */}
-      <details className="mb-6">
-        <summary className="text-xs text-muted cursor-pointer hover:text-foreground transition-colors">
-          How to play
-        </summary>
-        <div className="mt-2 text-xs text-muted leading-relaxed space-y-1.5 pl-3 border-l-2 border-border">
-          <p>Select a cell and name a player who matches <strong>both</strong> the row and column criteria.</p>
-          <p>For team + team: the player must have played for both teams.</p>
-          <p>For team + stat: the stat must have been achieved with that team (single-season stats) or the player just needs to have played for the team (career stats).</p>
-          <p>Each player can only be used once. You have 9 guesses.</p>
-        </div>
-      </details>
 
       {/* Retrosheet credit */}
       <p className="text-center text-[10px] text-muted-light">

@@ -382,8 +382,22 @@ export default async function PlayerPage({ params }: Props) {
     .filter((a) => votingAwards.some((v) => a.awardID.includes(v) || a.awardID === v))
     .sort((a, b) => a.yearID - b.yearID);
 
-  // Badge awards: everything from awardsPlayers that isn't shown via votingDetail
-  const badgeAwards = awards;
+  // Text awards: filter out anything already shown in votingDetail
+  const votingDetailKeys = new Set(
+    votingDetail.map((v) => `${v.awardID}-${v.yearID}-${v.lgID}`)
+  );
+  const badgeAwards = awards.filter((a) => {
+    // Check if this award+year+league combo is already in votingDetail
+    for (const v of votingDetail) {
+      if (v.yearID === a.yearID && v.lgID === a.lgID &&
+          (v.awardID.includes(a.awardID) || a.awardID.includes(v.awardID) ||
+           v.awardID === "Most Valuable Player" && a.awardID === "Most Valuable Player" ||
+           v.awardID === "Cy Young Award" && a.awardID === "Cy Young Award")) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   // Postseason pitching career totals
   const careerPitchingPost = pitchingPost.length > 0
@@ -616,51 +630,35 @@ export default async function PlayerPage({ params }: Props) {
       </section>
 
       {/* =================================================================== */}
-      {/* 3. Awards Section (enhanced)                                        */}
+      {/* 3. Awards Section                                                   */}
       {/* =================================================================== */}
-      {(awards.length > 0 || votingDetail.length > 0) && (
+      {awards.length > 0 && (
         <section className="mb-10">
           <h2 className="text-lg font-semibold tracking-tight mb-4">Awards</h2>
-
-          {/* Voting detail for MVP / Cy Young / ROY */}
-          {votingDetail.length > 0 && (
-            <div className="mb-4 space-y-1">
-              {votingDetail.map((a, i) => {
-                // Determine rank: sort all awardsShare entries for this award+year+league by pointsWon desc
-                // We only have this player's data, so show points info
-                const pctWon = a.pointsMax && a.pointsMax > 0
-                  ? ((a.pointsWon || 0) / a.pointsMax * 100).toFixed(1)
-                  : null;
-                return (
-                  <p key={i} className="text-sm">
-                    <span className="font-medium">{a.yearID}</span>{" "}
-                    <span className="text-muted">{a.lgID}</span>{" "}
-                    {a.awardID}{" "}
-                    <span className="text-muted">
-                      ({a.pointsWon ?? 0}/{a.pointsMax ?? 0} pts
-                      {pctWon && `, ${pctWon}%`}
-                      {a.votesFirst != null && a.votesFirst > 0 && `, ${a.votesFirst} 1st`})
+          {(() => {
+            // Group all awards by type, collect years, deduplicate
+            const grouped = new Map<string, string[]>();
+            for (const a of awards) {
+              const key = a.awardID;
+              if (!grouped.has(key)) grouped.set(key, []);
+              const years = grouped.get(key)!;
+              const yearStr = String(a.yearID);
+              if (!years.includes(yearStr)) years.push(yearStr);
+            }
+            return (
+              <div className="space-y-0.5">
+                {Array.from(grouped.entries()).map(([award, years]) => (
+                  <p key={award} className="text-sm">
+                    <span className="font-medium">{years.length}x</span>{" "}
+                    {award}{" "}
+                    <span className="text-muted text-xs">
+                      ({years.sort().join(", ")})
                     </span>
                   </p>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Badge awards */}
-          {badgeAwards.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {badgeAwards.map((a, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2.5 py-1 border border-border rounded-md bg-surface"
-                >
-                  {a.awardID} ({a.yearID}
-                  {a.lgID ? `, ${a.lgID}` : ""})
-                </span>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </section>
       )}
 
