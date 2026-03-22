@@ -731,6 +731,9 @@ export default async function PlayerPage({ params }: Props) {
                             <Link href={`/baseball/seasons/${row.yearID}`} className={LINK_CLASSES}>
                               {row.yearID}
                             </Link>
+                            {player.mlbamID && row.yearID >= 2000 && (
+                              <Link href={`/baseball/players/${id}/gamelog/${row.yearID}`} className="ml-1 text-[9px] text-muted-light hover:text-accent transition-colors" title="Game Log">GL</Link>
+                            )}
                           </td>
                           <td className={TD_LEFT}>
                             <Link href={`/baseball/teams/${row.teamID}/${row.yearID}`} className={LINK_CLASSES}>
@@ -893,6 +896,9 @@ export default async function PlayerPage({ params }: Props) {
                             <Link href={`/baseball/seasons/${row.yearID}`} className={LINK_CLASSES}>
                               {row.yearID}
                             </Link>
+                            {player.mlbamID && row.yearID >= 2000 && (
+                              <Link href={`/baseball/players/${id}/gamelog/${row.yearID}`} className="ml-1 text-[9px] text-muted-light hover:text-accent transition-colors" title="Game Log">GL</Link>
+                            )}
                           </td>
                           <td className={TD_LEFT}>
                             <Link href={`/baseball/teams/${row.teamID}/${row.yearID}`} className={LINK_CLASSES}>
@@ -988,6 +994,9 @@ export default async function PlayerPage({ params }: Props) {
                             <Link href={`/baseball/seasons/${row.yearID}`} className={LINK_CLASSES}>
                               {row.yearID}
                             </Link>
+                            {player.mlbamID && row.yearID >= 2000 && (
+                              <Link href={`/baseball/players/${id}/gamelog/${row.yearID}`} className="ml-1 text-[9px] text-muted-light hover:text-accent transition-colors" title="Game Log">GL</Link>
+                            )}
                           </td>
                           <td className={TD_LEFT}>
                             <Link href={`/baseball/teams/${row.teamID}/${row.yearID}`} className={LINK_CLASSES}>

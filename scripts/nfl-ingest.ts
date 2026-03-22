@@ -549,6 +549,69 @@ async function ingestStandings() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  4b. Weekly Stats (per-game, no aggregation)                        */
+/* ------------------------------------------------------------------ */
+
+async function ingestWeeklyStats() {
+  console.log("Ingesting NFL Weekly Stats (per-game rows)...");
+  const rows = readCSV("player_stats.csv");
+  if (rows.length === 0) return;
+
+  // Filter rows with valid player_id, season, week
+  const valid = rows.filter(
+    (r) => r.player_id && r.player_id !== "" && r.player_id !== "NA" &&
+           toInt(r.season) !== null && toInt(r.week) !== null
+  );
+
+  console.log(`  ${valid.length} valid weekly rows to insert`);
+
+  await prisma.nFLWeeklyStats.deleteMany();
+
+  let count = 0;
+  const batch = 2000;
+  for (let i = 0; i < valid.length; i += batch) {
+    const chunk = valid.slice(i, i + batch);
+    await prisma.nFLWeeklyStats.createMany({
+      data: chunk.map((r) => ({
+        playerId: r.player_id,
+        season: toInt(r.season)!,
+        week: toInt(r.week)!,
+        seasonType: r.season_type === "POST" ? "POST" : "REG",
+        team: toStr(r.recent_team),
+        opponent: toStr(r.opponent_team),
+        completions: toInt(r.completions),
+        passAttempts: toInt(r.attempts),
+        passYards: toInt(r.passing_yards),
+        passTds: toInt(r.passing_tds),
+        interceptions: toInt(r.interceptions),
+        sacks: toInt(r.sacks),
+        sackYards: toInt(r.sack_yards),
+        carries: toInt(r.carries),
+        rushYards: toInt(r.rushing_yards),
+        rushTds: toInt(r.rushing_tds),
+        receptions: toInt(r.receptions),
+        targets: toInt(r.targets),
+        recYards: toInt(r.receiving_yards),
+        recTds: toInt(r.receiving_tds),
+        fumbles:
+          (toInt(r.rushing_fumbles) || 0) +
+          (toInt(r.receiving_fumbles) || 0) +
+          (toInt(r.sack_fumbles) || 0),
+        fumblesLost:
+          (toInt(r.rushing_fumbles_lost) || 0) +
+          (toInt(r.receiving_fumbles_lost) || 0) +
+          (toInt(r.sack_fumbles_lost) || 0),
+        fantasyPoints: toFloat(r.fantasy_points),
+      })),
+      skipDuplicates: true,
+    });
+    count += chunk.length;
+    process.stdout.write(`\r  ${count}/${valid.length} weekly stat rows`);
+  }
+  console.log(` ✓`);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -634,6 +697,7 @@ async function main() {
   await ingestPlayers();
   await ingestGames();
   await ingestPlayerStats();
+  await ingestWeeklyStats();
   await ingest2025Stats();
   await ingestDraftPicks();
   await ingestStandings();

@@ -970,3 +970,42 @@ model NFLStandings {
   @@unique([season, team])
   @@index([season])
 }
+
+model NFLWeeklyStats {
+  id             Int     @id @default(autoincrement())
+  playerId       String
+  season         Int
+  week           Int
+  seasonType     String? // REG, POST
+  team           String?
+  opponent       String?
+
+  // Passing
+  completions    Int?
+  passAttempts   Int?
+  passYards      Int?
+  passTds        Int?
+  interceptions  Int?
+  sacks          Int?
+  sackYards      Int?
+
+  // Rushing
+  carries        Int?
+  rushYards      Int?
+  rushTds        Int?
+
+  // Receiving
+  receptions     Int?
+  targets        Int?
+  recYards       Int?
+  recTds         Int?
+
+  // Other
+  fumbles        Int?
+  fumblesLost    Int?
+  fantasyPoints  Float?
+
+  @@unique([playerId, season, week, seasonType])
+  @@index([playerId, season])
+  @@index([season, week])
+}
